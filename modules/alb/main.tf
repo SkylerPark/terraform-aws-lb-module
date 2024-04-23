@@ -1,40 +1,4 @@
 ###################################################
-# Security Group
-###################################################
-module "security_group" {
-  source = "git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/vpc/?ref=tags/1.1.0"
-  count  = var.security_group.enabled ? 1 : 0
-
-  name        = coalesce(var.security_group.name, var.name)
-  description = var.security_group.description
-  vpc_id      = var.vpc_id
-
-  revoke_rules_on_delete = true
-
-  ingress_rules = var.security_group.ingress_rules
-  egress_rules  = var.security_group.egress_rules
-
-  tags = var.tags
-}
-
-locals {
-  security_groups = concat(
-    (var.default_security_group.enabled
-      ? module.security_group[*].id
-      : []
-    ),
-    var.security_groups,
-  )
-}
-
-###################################################
-# Target Groups for Application Load Balancer 
-###################################################
-module "target_group" {
-  source = "../alb-target-group"
-}
-
-###################################################
 # Application Load Balancer
 ###################################################
 resource "aws_lb" "this" {
@@ -53,34 +17,34 @@ resource "aws_lb" "this" {
   }
 
   dynamic "connection_logs" {
-    for_each = var.connection_logs.enabled ? [var.connection_logs] : []
+    for_each = var.connection_log.enabled ? [var.connection_log] : []
 
     content {
-      bucket  = connection_logs.value.bucket
-      enabled = connection_logs.value.enabled
-      prefix  = connection_logs.value.prefix
+      bucket  = connection_log.value.bucket
+      enabled = connection_log.value.enabled
+      prefix  = connection_log.value.prefix
     }
   }
 
   dynamic "access_logs" {
-    for_each = var.access_logs.enabled ? [var.access_logs] : []
+    for_each = var.access_log.enabled ? [var.access_log] : []
 
     content {
-      bucket  = access_logs.value.bucket
-      enabled = access_logs.value.enabled
-      prefix  = access_logs.value.prefix
+      bucket  = access_log.value.bucket
+      enabled = access_log.value.enabled
+      prefix  = access_log.value.prefix
     }
   }
 
   ## Attributes
-  desync_mitigation_mode           = lower(var.desync_mitigation_mode)
+  desync_mitigation_mode           = var.desync_mitigation_mode
   enable_cross_zone_load_balancing = var.cross_zone_load_balancing_enabled
   enable_deletion_protection       = var.deletion_protection_enabled
   enable_http2                     = var.http2_enabled
   enable_waf_fail_open             = var.waf_fail_open_enabled
   idle_timeout                     = var.idle_timeout
 
-  # Headers
+  ## Headers
   drop_invalid_header_fields                  = var.drop_invalid_header_fields
   enable_tls_version_and_cipher_suite_headers = var.tls_negotiation_headers_enabled
   preserve_host_header                        = var.preserve_host_header
@@ -88,38 +52,9 @@ resource "aws_lb" "this" {
   xff_header_processing_mode                  = lower(var.xff_header.mode)
 
   tags = merge(
-    { "Name" = var.name },
+    {
+      "Name" = var.name
+    },
     var.tags
   )
-}
-
-###################################################
-# Listeners for Application Load Balancer
-###################################################
-module "listener" {
-  source = "../alb-listener"
-
-  for_each = {
-    for listener in var.listeners :
-    listener.port => listener
-  }
-
-  load_balancer = aws_lb.this.arn
-
-  port     = each.key
-  protocol = each.value.protocol
-
-  default_action_type       = each.value.default_action_type
-  default_action_parameters = each.value.default_action_parameters
-
-  rules = try(each.value.rules, {})
-
-  ## TLS
-  tls = {
-    certificate             = try(each.value.tls.certificate, null)
-    additional_certificates = try(each.value.tls.additional_certificates, [])
-    security_policy         = try(each.value.tls.security_policy, "ELBSecurityPolicy-2016-08")
-  }
-
-  tags = var.tags
 }

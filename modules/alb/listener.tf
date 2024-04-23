@@ -2,12 +2,13 @@
 # Listener
 ###################################################
 resource "aws_lb_listener" "this" {
-  load_balancer_arn = var.load_balancer
-  port              = var.port
-  protocol          = var.protocol
+  for_each          = { for listener in var.listeners : listener.port => listener }
+  load_balancer_arn = aws_lb.this.arn
+  port              = each.key
+  protocol          = each.value.protocol
 
-  certificate_arn = var.protocol == "HTTPS" ? var.tls.certificate : null
-  ssl_policy      = var.protocol == "HTTPS" ? var.tls.security_policy : null
+  certificate_arn = each.value.protocol == "HTTPS" ? each.value.tls.certificate : null
+  ssl_policy      = each.value.protocol == "HTTPS" ? each.value.tls.security_policy : null
 
   ## forward
   dynamic "default_action" {
@@ -19,7 +20,7 @@ resource "aws_lb_listener" "this" {
     content {
       type             = "forward"
       order            = try(default_action.value.order, null)
-      target_group_arn = default_action.value.target_group
+      target_group_arn = aws_lb_target_group.this[default_action.value.target_group].arn
     }
   }
 
@@ -39,7 +40,7 @@ resource "aws_lb_listener" "this" {
           for_each = default_action.value.targets
 
           content {
-            arn    = target_group.value.target_group
+            arn    = aws_lb_target_group.this[target_group.value.target_group].arn
             weight = try(target_group.value.weight, 1)
           }
         }
@@ -57,7 +58,7 @@ resource "aws_lb_listener" "this" {
 
   ## fixed response
   dynamic "default_action" {
-    for_each = (var.default_action_type == "FIXED_RESPONSE"
+    for_each = (each.value.default_action_type == "FIXED_RESPONSE"
       ? [var.default_action_parameters]
       : []
     )
@@ -76,7 +77,7 @@ resource "aws_lb_listener" "this" {
 
   ## authenticate cognito
   dynamic "default_action" {
-    for_each = (var.default_action_type == "AUTHENTICATE_COGNITO"
+    for_each = (each.value.default_action_type == "AUTHENTICATE_COGNITO"
       ? [var.default_action_parameters]
       : []
     )
@@ -87,7 +88,7 @@ resource "aws_lb_listener" "this" {
 
       authenticate_cognito {
         authentication_request_extra_params = try(default_action.value.authentication_request_extra_params, null)
-        on_unauthenticated_request          = try(default_action.value.on_unauthenticated_request, null)
+        on_unauthenticated_request          = try(default_action.value.on_unauthenticated_request, "deny")
         scope                               = try(default_action.value.scope, null)
         session_cookie_name                 = try(default_action.value.session_cookie_name, null)
         session_timeout                     = try(default_action.value.session_timeout, null)
@@ -100,7 +101,7 @@ resource "aws_lb_listener" "this" {
 
   ## authenticate oidc
   dynamic "default_action" {
-    for_each = (var.default_action_type == "AUTHENTICATE_OIDC"
+    for_each = (each.value.default_action_type == "AUTHENTICATE_OIDC"
       ? [var.default_action_parameters]
       : []
     )
@@ -127,7 +128,7 @@ resource "aws_lb_listener" "this" {
 
   ## redirect 301
   dynamic "default_action" {
-    for_each = (var.default_action_type == "REDIRECT_301"
+    for_each = (each.value.default_action_type == "REDIRECT_301"
       ? [var.default_action_parameters]
       : []
     )
@@ -149,7 +150,7 @@ resource "aws_lb_listener" "this" {
 
   ## redirect 302
   dynamic "default_action" {
-    for_each = (var.default_action_type == "REDIRECT_302"
+    for_each = (each.value.default_action_type == "REDIRECT_302"
       ? [var.default_action_parameters]
       : []
     )
@@ -170,6 +171,9 @@ resource "aws_lb_listener" "this" {
   }
 
   tags = merge(
+    {
+      "Name" = "${aws_lb.this.name}-${each.value.protocol}:${each.key}"
+    },
     var.tags
   )
 }
@@ -177,22 +181,34 @@ resource "aws_lb_listener" "this" {
 ###################################################
 # Listener Rule(s)
 ###################################################
+locals {
+  listener_rules = flatten([
+    for listener in var.listeners : [
+      for rule in listener.rules : {
+        name              = "${aws_lb.this.name}-${listener.protocol}:${listener.port}/${rule.priority}"
+        priority          = rule.priority
+        listener_arn      = aws_lb_listener.this[listener.port].arn
+        conditions        = rule.conditions
+        action_type       = rule.action_type
+        action_parameters = rule.action_parameters
+      }
+    ]
+  ])
+}
+
 resource "aws_lb_listener_rule" "this" {
-  for_each = {
-    for rule in var.rules :
-    rule.priority => rule
-  }
+  for_each = { for rule in local.Listener_rules : rule.name => rule }
 
-  listener_arn = aws_lb_listener.this.arn
+  listener_arn = each.value.listener_arn
 
-  priority = each.key
+  priority = each.value.priority
 
   dynamic "condition" {
     for_each = try(each.value.conditions, [])
 
     content {
       dynamic "host_header" {
-        for_each = condition.value.type == "HOST" ? ["go"] : []
+        for_each = condition.value.type == "HOST" ? [1] : []
 
         content {
           values = condition.value.values
@@ -200,7 +216,7 @@ resource "aws_lb_listener_rule" "this" {
       }
 
       dynamic "http_request_method" {
-        for_each = condition.value.type == "HTTP_METHOD" ? ["go"] : []
+        for_each = condition.value.type == "HTTP_METHOD" ? [1] : []
 
         content {
           values = condition.value.values
@@ -208,7 +224,7 @@ resource "aws_lb_listener_rule" "this" {
       }
 
       dynamic "http_header" {
-        for_each = condition.value.type == "HTTP_HEADER" ? ["go"] : []
+        for_each = condition.value.type == "HTTP_HEADER" ? [1] : []
 
         content {
           http_header_name = condition.value.name
@@ -217,7 +233,7 @@ resource "aws_lb_listener_rule" "this" {
       }
 
       dynamic "path_pattern" {
-        for_each = condition.value.type == "PATH" ? ["go"] : []
+        for_each = condition.value.type == "PATH" ? [1] : []
 
         content {
           values = condition.value.values
@@ -234,7 +250,7 @@ resource "aws_lb_listener_rule" "this" {
       }
 
       dynamic "source_ip" {
-        for_each = condition.value.type == "SOURCE_IP" ? ["go"] : []
+        for_each = condition.value.type == "SOURCE_IP" ? [1] : []
 
         content {
           values = condition.value.values
@@ -252,7 +268,7 @@ resource "aws_lb_listener_rule" "this" {
     content {
       type = "forward"
 
-      target_group_arn = action.value.target_group
+      target_group_arn = aws_lb_target_group.this[action.value.target_group].arn
     }
   }
 
@@ -270,12 +286,12 @@ resource "aws_lb_listener_rule" "this" {
           for_each = action.value.targets
 
           content {
-            arn    = target_group.value.target_group
+            arn    = aws_lb_target_group.this[target_group.value.target_group].arn
             weight = try(target_group.value.weight, 1)
           }
         }
         dynamic "stickiness" {
-          for_each = try(action.value.stickiness_duration, 0) > 0 ? ["go"] : []
+          for_each = try([action.value.stickiness_duration], [])
 
           content {
             enabled  = true
@@ -345,8 +361,29 @@ resource "aws_lb_listener_rule" "this" {
 
   tags = merge(
     {
-      "Name" = "${var.name}/${each.key}"
+      "Name" = each.key
     },
     var.tags,
   )
+}
+
+###################################################
+# Certificates for Listeners
+###################################################
+locals {
+  certificates = flatten([
+    for listener in var.listeners : [
+      for certificate in var.tls.additional_certificates : {
+        name            = "${aws_lb.this.name}-${listener.protocol}:${listener.port}/${certificate}"
+        listener_arn    = aws_lb_listener.this[listeners.port].arn
+        certificate_arn = certificate
+      } if listener.protocol == "HTTPS"
+    ]
+  ])
+}
+resource "aws_lb_listener_certificate" "this" {
+  for_each = { for certificate in local.certificates : certificate.name => certificate }
+
+  listener_arn    = each.value.listener_arn
+  certificate_arn = each.value.certificate_arn
 }
