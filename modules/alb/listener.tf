@@ -8,7 +8,7 @@ resource "aws_lb_listener" "this" {
   protocol          = each.value.protocol
 
   certificate_arn = each.value.protocol == "HTTPS" ? each.value.tls.certificate : null
-  ssl_policy      = each.value.protocol == "HTTPS" ? each.value.tls.security_policy : null
+  ssl_policy      = each.value.protocol == "HTTPS" ? try(each.value.tls.security_policy, "ELBSecurityPolicy-2016-08") : null
 
   ## forward
   dynamic "default_action" {
@@ -27,7 +27,7 @@ resource "aws_lb_listener" "this" {
   ## weighted forward
   dynamic "default_action" {
     for_each = (each.value.default_action_type == "WEIGHTED_FORWARD"
-      ? [var.default_action_parameters]
+      ? [each.value.default_action_parameters]
       : []
     )
 
@@ -59,7 +59,7 @@ resource "aws_lb_listener" "this" {
   ## fixed response
   dynamic "default_action" {
     for_each = (each.value.default_action_type == "FIXED_RESPONSE"
-      ? [var.default_action_parameters]
+      ? [each.value.default_action_parameters]
       : []
     )
 
@@ -78,7 +78,7 @@ resource "aws_lb_listener" "this" {
   ## authenticate cognito
   dynamic "default_action" {
     for_each = (each.value.default_action_type == "AUTHENTICATE_COGNITO"
-      ? [var.default_action_parameters]
+      ? [each.value.default_action_parameters]
       : []
     )
 
@@ -102,7 +102,7 @@ resource "aws_lb_listener" "this" {
   ## authenticate oidc
   dynamic "default_action" {
     for_each = (each.value.default_action_type == "AUTHENTICATE_OIDC"
-      ? [var.default_action_parameters]
+      ? [each.value.default_action_parameters]
       : []
     )
 
@@ -129,7 +129,7 @@ resource "aws_lb_listener" "this" {
   ## redirect 301
   dynamic "default_action" {
     for_each = (each.value.default_action_type == "REDIRECT_301"
-      ? [var.default_action_parameters]
+      ? [each.value.default_action_parameters]
       : []
     )
 
@@ -151,7 +151,7 @@ resource "aws_lb_listener" "this" {
   ## redirect 302
   dynamic "default_action" {
     for_each = (each.value.default_action_type == "REDIRECT_302"
-      ? [var.default_action_parameters]
+      ? [each.value.default_action_parameters]
       : []
     )
 
@@ -184,7 +184,7 @@ resource "aws_lb_listener" "this" {
 locals {
   listener_rules = flatten([
     for listener in var.listeners : [
-      for rule in listener.rules : {
+      for rule in try(listener.rules, []) : {
         name              = "${aws_lb.this.name}-${listener.protocol}:${listener.port}/${rule.priority}"
         priority          = rule.priority
         listener_arn      = aws_lb_listener.this[listener.port].arn
@@ -197,7 +197,7 @@ locals {
 }
 
 resource "aws_lb_listener_rule" "this" {
-  for_each = { for rule in local.Listener_rules : rule.name => rule }
+  for_each = { for rule in local.listener_rules : rule.name => rule }
 
   listener_arn = each.value.listener_arn
 
@@ -373,9 +373,9 @@ resource "aws_lb_listener_rule" "this" {
 locals {
   certificates = flatten([
     for listener in var.listeners : [
-      for certificate in var.tls.additional_certificates : {
+      for certificate in try(listener.tls.additional_certificates, []) : {
         name            = "${aws_lb.this.name}-${listener.protocol}:${listener.port}/${certificate}"
-        listener_arn    = aws_lb_listener.this[listeners.port].arn
+        listener_arn    = aws_lb_listener.this[listener.port].arn
         certificate_arn = certificate
       } if listener.protocol == "HTTPS"
     ]

@@ -31,9 +31,9 @@ resource "aws_lb_listener" "this" {
 locals {
   certificates = flatten([
     for listener in var.listeners : [
-      for certificate in var.tls.additional_certificates : {
+      for certificate in try(listener.tls.additional_certificates, []) : {
         name            = "${aws_lb.this.name}-${listener.protocol}:${listener.port}/${certificate}"
-        listener_arn    = aws_lb_listener.this[listeners.port].arn
+        listener_arn    = aws_lb_listener.this[listener.port].arn
         certificate_arn = certificate
       } if listener.protocol == "TLS"
     ]

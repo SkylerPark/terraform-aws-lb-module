@@ -10,6 +10,12 @@ variable "tags" {
   default     = {}
 }
 
+variable "vpc_id" {
+  description = "(필수) load balancer 가 생성 될 VPC ID"
+  type        = string
+  nullable    = false
+}
+
 ###################################################
 # Application Load Balancer
 ###################################################
@@ -32,10 +38,10 @@ variable "network_mapping" {
   (선택) load balancer 에 IP 주소 설정. 서브넷의 대상으로 트래픽을 라우팅 `network_mapping` 블록 내용.
     (필수) `subnet` - load balancer 에 연결할 서브넷 ID 각 영역당 하나의 서브넷만 할당 가능.
   EOF
-  type = map(object({
+  type = list(object({
     subnet = string
   }))
-  default  = {}
+  default  = []
   nullable = false
 }
 
@@ -164,7 +170,7 @@ variable "xff_header" {
 ###################################################
 # Listener
 ###################################################
-ariable "listeners" {
+variable "listeners" {
   description = <<EOF
   (선택) load balancer 리스너 목록 입니다. `listener` 블록 내용.
     (필수) `port` - load balancer 리스너 포트 정보.
@@ -196,7 +202,7 @@ ariable "listeners" {
       (선택) `issuer` - IdP 의 OIDC 발급 식별자. `default_action_type` 이 `AUTHENTICATE_OIDC` 일때만 설정.
       (선택) `token_endpoint` - IdP 의 토큰 엔드포인트. `default_action_type` 이 `AUTHENTICATE_OIDC` 일때만 설정.
       (선택) `user_info_endpoint` - IdP 사용자 정보 엔드포인트. `default_action_type` 이 `AUTHENTICATE_OIDC` 일때만 설정.
-      (필수) `tagets` - target group 리스트. `targets` 블록 내용. `default_action_type` 이 `FORWARD`, `WEIGHTED_FORWARD` 일때만 설정.
+      (필수) `targets` - target group 리스트. `targets` 블록 내용. `default_action_type` 이 `FORWARD`, `WEIGHTED_FORWARD` 일때만 설정.
         (필수) `target_group` - 리스너에 매핑시킬 target group 이름.
         (선택) `weight` - target group 에 대한 traffic weight `0` 부터 `999` 설정 가능. Default: `1`.
       (선택) `stickiness_duration` - 규칙의 대상 그룹으로 고정으로 라우팅 되기 위한 설정. `0` 부터 `604800` 설정가능. Default: `0`. `default_action_type` 이 `WEIGHTED_FORWARD` 일때만 설정.
@@ -223,7 +229,7 @@ ariable "listeners" {
         (선택) `path` - 리다이렉션 Url 패스 정보 `/`. 다음 값이 포함 가능.`#{host}`, `#{path}`, and `#{port}`. Defaults: `/#{path}`. `default_action_type` 이 `REDIRECT_301` or `REDIRECT_302` 일때만 설정.
         (선택) `query` - 리다이렉션 Url 쿼리 변수가 필요한 경우 설정. Defaults: `#{query}`. `default_action_type` 이 `REDIRECT_301` or `REDIRECT_302` 일때만 설정.
         (선택) `target_group` - Target Group 에 대한 이름. `default_action_type` 이 `WEIGHTED_FORWARD`, `FORWARD` 일때만 설정.
-        (필수) `tagets` - target group 리스트. `targets` 블록 내용. `default_action_type` 이 `FORWARD`, `WEIGHTED_FORWARD` 일때만 설정.
+        (필수) `targets` - target group 리스트. `targets` 블록 내용. `default_action_type` 이 `FORWARD`, `WEIGHTED_FORWARD` 일때만 설정.
           (필수) `target_group` - 리스너에 매핑시킬 target group 이름.
           (선택) `weight` - target group 에 대한 traffic weight `0` 부터 `999` 설정 가능. Default: `1`.
       (선택) `stickiness_duration` - 규칙의 대상 그룹으로 고정으로 라우팅 되기 위한 설정. `0` 부터 `604800` 설정가능. Default: `0`. `default_action_type` 이 `WEIGHTED_FORWARD` 일때만 설정.

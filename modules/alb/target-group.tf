@@ -69,20 +69,20 @@ data "aws_partition" "current" {}
 
 locals {
   targets = flatten([
-    for target_group, target_values in var.taget_groups : [
-      for target in target_values.targets : {
-        name                      = "${target.target_group}/${target.target_id}"
-        target_id                 = target.target_id
-        target_group              = target_group
-        target_type               = target_group.target_type
-        port                      = target_group.target_type == "lambda" ? null : try(target.port, null)
+    for target_group, target_values in var.target_groups : [
+      for target_name, target in target_values.targets : {
+        name                      = "${target_group}/${target_name}"
+        target_id                 = try(target.target_id, null)
+        target_group_arn          = aws_lb_target_group.this[target_group].arn
+        target_type               = target_values.target_type
+        port                      = target_values.target_type == "lambda" ? null : try(target.port, null)
         availability_zone         = try(target.availability_zone, null)
         lambda_function_name      = try(target.lambda_function_name, null)
         lambda_qualifier          = try(target.lambda_qualifier, null)
         lambda_statement_id       = try(target.lambda_statement_id, "AllowExecutionFromLb")
         lambda_action             = try(target.lambda_action, "lambda:InvokeFunction")
         lambda_principal          = try(target.lambda_principal, "elasticloadbalancing.${data.aws_partition.current.dns_suffix}")
-        lambda_source_account     = try(arget.lambda_source_account, null)
+        lambda_source_account     = try(target.lambda_source_account, null)
         lambda_event_source_token = try(target.lambda_event_source_token, null)
       }
     ]
@@ -94,7 +94,7 @@ resource "aws_lb_target_group_attachment" "this" {
     for target in local.targets : target.name => target
   }
 
-  target_group_arn  = aws_lb_target_group.this[each.value.target_group].arn
+  target_group_arn  = each.value.target_group_arn
   target_id         = each.value.target_id
   port              = each.value.target_type == "lambda" ? null : each.value.port
   availability_zone = each.value.availability_zone
@@ -112,7 +112,7 @@ resource "aws_lambda_permission" "this" {
   statement_id       = each.value.lambda_statement_id
   action             = each.value.lambda_action
   principal          = each.value.lambda_principal
-  source_arn         = aws_lb_target_group.this[each.value.target_group].arn
+  source_arn         = each.value.target_group_arn
   source_account     = each.value.lambda_source_account
   event_source_token = each.value.lambda_event_source_token
 }

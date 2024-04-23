@@ -68,31 +68,40 @@ module "alb" {
     },
     {
       port                = 443
-      protocol            = "HTTPS"
+      protocol            = "HTTP" # Note: HTTPS 로 설정시 tls.certificate 인증서 발급 후 설정 현재는 임시로 설정
       default_action_type = "FORWARD"
       tls = {
-        certificate = "test"
+        certificate = "arn:aws:acm:Region:444455556666:certificate/certificate_ID"
       }
       default_action_parameters = {
-        target_group = "instance"
+        target_group = "parksm-instance"
       }
     }
   ]
 
   target_groups = {
-    instance = {
+    parksm-instance = {
       target_type      = "instance"
       port             = 8080
       protocol         = "HTTP"
       protocol_version = "HTTP1"
 
+      health_check = {
+        protocol = "HTTP"
+        port     = 80
+        path     = "/health"
+
+        interval            = 10
+        timeout             = 5
+        healthy_threshold   = 5
+        unhealthy_threshold = 2
+      }
+
       stickiness_enabled            = false
       load_balancing_algorithm_type = "least_outstanding_requests"
-      targets = [
-        {
-          target_id = ""
-        }
-      ]
+      targets = {
+        for instance, value in local.instances : "parksm-rnd-test-${instance}" => module.instance[instance].id if value.is_lb
+      }
     }
   }
 }

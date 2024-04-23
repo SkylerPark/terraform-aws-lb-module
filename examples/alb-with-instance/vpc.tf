@@ -2,6 +2,10 @@ locals {
   availability_zones   = ["ap-northeast-2a", "ap-northeast-2c"]
   public_subnet_count  = 2
   private_subnet_count = 2
+
+  nat_gateway_count        = local.single_nat_gateway ? 1 : local.multi_per_az_nat_gateway ? length(local.availability_zones) : 0
+  multi_per_az_nat_gateway = true
+  single_nat_gateway       = false
 }
 
 module "vpc" {
@@ -60,7 +64,7 @@ module "nat_gateway" {
 }
 
 module "public_route_table" {
-  source  = "../../modules/route-table"
+  source  = "git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/route-table/?ref=tags/1.1.0"
   name    = "parksm-public-rt"
   vpc_id  = module.vpc.id
   subnets = module.public_subnet_group.ids
@@ -79,7 +83,7 @@ module "public_route_table" {
 }
 
 module "private_route_table" {
-  source = "../../modules/route-table"
+  source = "git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/route-table/?ref=tags/1.1.0"
   count  = local.nat_gateway_count
   name   = "parksm-private-rt-${local.availability_zones[count.index]}"
   vpc_id = module.vpc.id

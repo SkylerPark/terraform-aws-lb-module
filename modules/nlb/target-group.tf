@@ -43,11 +43,27 @@ resource "aws_lb_target_group" "this" {
   )
 }
 
-resource "aws_lb_target_group_attachment" "this" {
-  for_each = var.target_groups
+locals {
+  targets = flatten([
+    for target_group, target_values in var.target_groups : [
+      for target_name, target in target_values.targets : {
+        name              = "${target_group}/${target_name}"
+        target_id         = try(target.target_id, null)
+        target_group_arn  = aws_lb_target_group.this[target_group].arn
+        port              = try(target.port, null)
+        availability_zone = try(target.availability_zone, null)
+      }
+    ]
+  ])
+}
 
-  target_group_arn  = aws_lb_target_group.this[each.key].arn
+resource "aws_lb_target_group_attachment" "this" {
+  for_each = {
+    for target in local.targets : target.name => target
+  }
+
+  target_group_arn  = each.value.target_group_arn
   target_id         = each.value.target_id
   port              = each.value.port
-  availability_zone = try(each.value.availability_zone, null)
+  availability_zone = each.value.availability_zone
 }

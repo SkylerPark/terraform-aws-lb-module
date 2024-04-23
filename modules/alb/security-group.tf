@@ -2,7 +2,7 @@
 # Security Group
 ###################################################
 module "security_group" {
-  source = "git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/vpc/?ref=tags/1.1.0"
+  source = "git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/security-group/?ref=tags/1.1.0"
   count  = var.default_security_group.enabled ? 1 : 0
 
   name        = coalesce(var.default_security_group.name, var.name)

@@ -5,6 +5,20 @@ module "ssh_key" {
   create_private_key = true
 }
 
+data "aws_ami" "amazon_linux2" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-ebs"]
+  }
+}
+
 locals {
   instances = {
     "01" = {
@@ -29,7 +43,7 @@ module "security_group" {
       from_port   = 80
       to_port     = 80
       protocol    = "tcp"
-      ipv4_cidrs  = [module.vpc.ipv4_cidrs]
+      ipv4_cidrs  = [module.vpc.ipv4_primary_cidr]
     },
   ]
   egress_rules = [
