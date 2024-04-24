@@ -1,6 +1,13 @@
 ###################################################
 # Network Load Balancer
 ###################################################
+locals {
+  route53_resolver_availability_zone_affinity = {
+    "ANY"     = "any_availability_zone"
+    "PARTIAL" = "partial_availability_zone_affinity"
+    "ALL"     = "availability_zone_affinity"
+  }
+}
 resource "aws_lb" "this" {
   name               = var.name
   load_balancer_type = "network"
@@ -25,18 +32,8 @@ resource "aws_lb" "this" {
   )
   security_groups = local.security_groups
 
-  dynamic "connection_logs" {
-    for_each = var.connection_logs.enabled ? [var.connection_logs] : []
-
-    content {
-      bucket  = connection_logs.value.bucket
-      enabled = connection_logs.value.enabled
-      prefix  = connection_logs.value.prefix
-    }
-  }
-
   dynamic "access_logs" {
-    for_each = var.access_logs.enabled ? [var.access_logs] : []
+    for_each = var.access_log.enabled ? [var.access_log] : []
 
     content {
       bucket  = access_logs.value.bucket
@@ -46,6 +43,7 @@ resource "aws_lb" "this" {
   }
 
   ## Attributes
+  dns_record_client_routing_policy = local.route53_resolver_availability_zone_affinity[var.route53_resolver_availability_zone_affinity]
   enable_cross_zone_load_balancing = var.cross_zone_load_balancing_enabled
   enable_deletion_protection       = var.deletion_protection_enabled
 

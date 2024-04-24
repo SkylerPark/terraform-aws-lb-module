@@ -1,10 +1,6 @@
-locals {
-  region = "ap-northeast-2"
-}
-
-module "alb" {
-  source          = "../../modules/alb"
-  name            = "parksm-alb-instance"
+module "nlb" {
+  source          = "../../modules/nlb"
+  name            = "parksm-nlb-alb"
   is_public       = true
   ip_address_type = "ipv4"
   vpc_id          = module.vpc.id
@@ -17,7 +13,7 @@ module "alb" {
 
   default_security_group = {
     enabled = true
-    name    = "parksm-alb-instance"
+    name    = "parksm-nlb-alb"
     ingress_rules = [
       {
         id          = "tcp/80"
@@ -49,42 +45,31 @@ module "alb" {
   }
 
   ## Attributes
-  desync_mitigation_mode      = "defensive"
-  drop_invalid_header_fields  = false
-  deletion_protection_enabled = false
-  http2_enabled               = false
-  waf_fail_open_enabled       = false
-  idle_timeout                = 60
+  route53_resolver_availability_zone_affinity = "ANY"
+  cross_zone_load_balancing_enabled           = true
+  deletion_protection_enabled                 = false
 
   listeners = [
     {
-      port                = 80
-      protocol            = "HTTP"
-      default_action_type = "REDIRECT_301"
-      default_action_parameters = {
-        protocol = "HTTPS"
-        port     = 443
-      }
+      port         = 80
+      protocol     = "TCP"
+      target_group = "parksm-alb-80"
     },
     {
-      port                = 443
-      protocol            = "HTTP" # Note: HTTPS 로 설정시 tls.certificate 인증서 발급 후 설정 현재는 임시로 설정
-      default_action_type = "FORWARD"
+      port         = 443
+      protocol     = "TCP" # Note: TLS 로 설정시 tls.certificate 인증서 발급 후 설정 현재는 임시로 설정
+      target_group = "parksm-alb-443"
       tls = {
         certificate = "arn:aws:acm:Region:444455556666:certificate/certificate_ID"
-      }
-      default_action_parameters = {
-        target_group = "parksm-instance"
       }
     }
   ]
 
   target_groups = {
-    parksm-instance = {
-      target_type      = "instance"
-      port             = 8080
-      protocol         = "HTTP"
-      protocol_version = "HTTP1"
+    parksm-alb-80 = {
+      target_type = "alb"
+      port        = 80
+      protocol    = "TCP"
 
       health_check = {
         protocol = "HTTP"
@@ -97,12 +82,34 @@ module "alb" {
         unhealthy_threshold = 2
       }
 
-      stickiness_enabled            = false
-      load_balancing_algorithm_type = "least_outstanding_requests"
+      stickiness_enabled = false
       targets = {
-        for instance, value in local.instances : "parksm-rnd-test-${instance}" => {
-          target_id = module.instance[instance].id
-        } if value.is_lb
+        "parksm-alb-instance" = {
+          target_id = module.alb.arn
+        }
+      }
+    }
+    parksm-alb-443 = {
+      target_type = "alb"
+      port        = 443
+      protocol    = "TCP"
+
+      health_check = {
+        protocol = "HTTP"
+        port     = 443
+        path     = "/health"
+
+        interval            = 10
+        timeout             = 5
+        healthy_threshold   = 5
+        unhealthy_threshold = 2
+      }
+
+      stickiness_enabled = false
+      targets = {
+        "parksm-alb-instance" = {
+          target_id = module.alb.arn
+        }
       }
     }
   }

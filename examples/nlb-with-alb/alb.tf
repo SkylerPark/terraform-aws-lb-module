@@ -100,9 +100,7 @@ module "alb" {
       stickiness_enabled            = false
       load_balancing_algorithm_type = "least_outstanding_requests"
       targets = {
-        for instance, value in local.instances : "parksm-rnd-test-${instance}" => {
-          target_id = module.instance[instance].id
-        } if value.is_lb
+        for instance, value in local.instances : "parksm-rnd-test-${instance}" => module.instance[instance].id if value.is_lb
       }
     }
   }

@@ -53,6 +53,11 @@ output "default_security_group" {
   value       = one(module.security_group[*].id)
 }
 
+output "security_groups" {
+  description = "load balancer security group Ids."
+  value       = aws_lb.this.security_groups
+}
+
 output "access_log" {
   description = "load balancer Access log 설정값"
   value       = var.access_log

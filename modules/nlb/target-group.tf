@@ -7,7 +7,7 @@ resource "aws_lb_target_group" "this" {
 
   vpc_id = var.vpc_id
 
-  target_type     = each.value.target.type
+  target_type     = each.value.target_type
   ip_address_type = try(each.value.ip_address_type, null)
   port            = each.value.port
   protocol        = each.value.protocol
@@ -17,6 +17,14 @@ resource "aws_lb_target_group" "this" {
   preserve_client_ip     = try(each.value.preserve_client_ip, null)
   connection_termination = try(each.value.connection_termination, null)
   deregistration_delay   = try(each.value.deregistration_delay, null)
+
+  dynamic "stickiness" {
+    for_each = each.value.stickiness_enabled ? [1] : []
+    content {
+      enabled = each.value.stickiness_enabled
+      type    = "source_ip"
+    }
+  }
 
   ## health check
   dynamic "health_check" {
@@ -48,10 +56,10 @@ locals {
     for target_group, target_values in var.target_groups : [
       for target_name, target in target_values.targets : {
         name              = "${target_group}/${target_name}"
-        target_id         = try(target.target_id, null)
+        target_id         = target.target_id
         target_group_arn  = aws_lb_target_group.this[target_group].arn
-        port              = try(target.port, null)
-        availability_zone = try(target.availability_zone, null)
+        port              = target.port
+        availability_zone = target.availability_zone
       }
     ]
   ])

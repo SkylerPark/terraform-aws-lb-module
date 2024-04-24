@@ -1,5 +1,5 @@
 ###################################################
-# Listener
+# Listener(s)
 ###################################################
 resource "aws_lb_listener" "this" {
   for_each          = { for listener in var.listeners : listener.port => listener }
@@ -7,14 +7,14 @@ resource "aws_lb_listener" "this" {
   port              = each.key
   protocol          = each.value.protocol
 
-  certificate_arn = each.value.protocol == "TLS" ? var.tls.certificate : null
-  ssl_policy      = each.value.protocol == "TLS" ? var.tls.security_policy : null
-  alpn_policy     = each.value.protocol == "TLS" ? var.tls.alpn_policy : null
+  certificate_arn = each.value.protocol == "TLS" ? each.value.tls.certificate : null
+  ssl_policy      = each.value.protocol == "TLS" ? each.value.tls.security_policy : null
+  alpn_policy     = each.value.protocol == "TLS" ? each.value.tls.alpn_policy : null
 
   ## forward
   default_action {
     type             = "forward"
-    target_group_arn = each.value.target_group
+    target_group_arn = aws_lb_target_group.this[each.value.target_group].arn
   }
 
   tags = merge(
@@ -31,7 +31,7 @@ resource "aws_lb_listener" "this" {
 locals {
   certificates = flatten([
     for listener in var.listeners : [
-      for certificate in try(listener.tls.additional_certificates, []) : {
+      for certificate in listener.tls.additional_certificates : {
         name            = "${aws_lb.this.name}-${listener.protocol}:${listener.port}/${certificate}"
         listener_arn    = aws_lb_listener.this[listener.port].arn
         certificate_arn = certificate

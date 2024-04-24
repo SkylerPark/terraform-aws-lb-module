@@ -1,5 +1,5 @@
 ###################################################
-# Listener
+# Listener(s)
 ###################################################
 resource "aws_lb_listener" "this" {
   for_each          = { for listener in var.listeners : listener.port => listener }
@@ -8,7 +8,7 @@ resource "aws_lb_listener" "this" {
   protocol          = each.value.protocol
 
   certificate_arn = each.value.protocol == "HTTPS" ? each.value.tls.certificate : null
-  ssl_policy      = each.value.protocol == "HTTPS" ? try(each.value.tls.security_policy, "ELBSecurityPolicy-2016-08") : null
+  ssl_policy      = each.value.protocol == "HTTPS" ? each.value.tls.security_policy : null
 
   ## forward
   dynamic "default_action" {
@@ -19,7 +19,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type             = "forward"
-      order            = try(default_action.value.order, null)
+      order            = default_action.value.order
       target_group_arn = aws_lb_target_group.this[default_action.value.target_group].arn
     }
   }
@@ -33,7 +33,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "forward"
-      order = try(default_action.value.order, null)
+      order = default_action.value.order
 
       forward {
         dynamic "target_group" {
@@ -65,7 +65,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "fixed-response"
-      order = try(default_action.value.order, null)
+      order = default_action.value.order
 
       fixed_response {
         status_code  = try(default_action.value.status_code, 503)
@@ -84,7 +84,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "authenticate-cognito"
-      order = try(default_action.value.order, null)
+      order = default_action.value.order
 
       authenticate_cognito {
         authentication_request_extra_params = try(default_action.value.authentication_request_extra_params, null)
@@ -108,7 +108,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "authenticate-oidc"
-      order = try(default_action.value.order, null)
+      order = default_action.value.order
 
       authenticate_oidc {
         authentication_request_extra_params = try(default_action.value.authentication_request_extra_params, null)
@@ -135,7 +135,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "redirect"
-      order = try(default_action.value.order, null)
+      order = default_action.value.order
 
       redirect {
         status_code = "HTTP_301"
@@ -157,7 +157,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "redirect"
-      order = try(default_action.value.order, null)
+      order = default_action.value.order
 
       redirect {
         status_code = "HTTP_302"
@@ -373,7 +373,7 @@ resource "aws_lb_listener_rule" "this" {
 locals {
   certificates = flatten([
     for listener in var.listeners : [
-      for certificate in try(listener.tls.additional_certificates, []) : {
+      for certificate in listener.tls.additional_certificates : {
         name            = "${aws_lb.this.name}-${listener.protocol}:${listener.port}/${certificate}"
         listener_arn    = aws_lb_listener.this[listener.port].arn
         certificate_arn = certificate

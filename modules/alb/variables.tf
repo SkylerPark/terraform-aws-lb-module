@@ -168,7 +168,7 @@ variable "xff_header" {
 }
 
 ###################################################
-# Listener
+# Listener(s)
 ###################################################
 variable "listeners" {
   description = <<EOF
@@ -178,9 +178,8 @@ variable "listeners" {
     (필수) `default_action_type` - 리스너 default action 에 대한 정보 `FORWARD`, `WEIGHTED_FORWARD`, `AUTHENTICATE_COGNITO`, `AUTHENTICATE_OIDC`, `FIXED_RESPONSE`, `REDIRECT_301`, `REDIRECT_302`.
     (선택) `default_action_parameters` - default action 에 대한 파타미터 정보 `default_action_parameters` 블록 내용.
       (선택) `order` - 작업에 대한 순서 between `1` and `50000`.
-      (선택) `target_group` - 리스너에 매핑시킬 target group 이름.
       (선택) `status_code` - 고정 응답에 대한 status code. `2XX`, `4XX`, `5XX. `default_action_type` 이 `FIXED_RESPONSE` 일때만 설정.
-      (선택) `content_type` - 응답에 대한 `Content-Type`. `text/plain`, `text/css`, `text/html`, `application/javascript`, `application/json`. `default_action_type` 이 `FIXED_RESPONSE` 일때만 설정. 
+      (선택) `content_type` - 응답에 대한 `Content-Type`. `text/plain`, `text/css`, `text/html`, `application/javascript`, `application/json`. `default_action_type` 이 `FIXED_RESPONSE` 일때만 설정.
       (선택) `data` - Body 메세지 설정. `default_action_type` 이 `FIXED_RESPONSE` 일때만 설정.
       (선택) `protocol` - 리다이렉션 Url 프로토콜. `HTTP`, `HTTPS`, or `#{protocol}`. Defaults: `#{protocol}`. `default_action_type` 이 `REDIRECT_301` or `REDIRECT_302` 일때만 설정.
       (선택) `host` - 리다이렉션 Url 호스트 이름. Defaults: `#{host}`. `default_action_type` 이 `REDIRECT_301` or `REDIRECT_302` 일때만 설정.
@@ -219,9 +218,8 @@ variable "listeners" {
         (필수) `values` for `SOURCE_IP` -일치시킬 IP CIDR 목록.
       (필수) `action_type` - 라우팅 작업에 대한 유형 `FORWARD`, `WEIGHTED_FORWARD`, `FIXED_RESPONSE`, `REDIRECT_301` and `REDIRECT_302`.
       (선택) `action_parameters` - default action 에 대한 파타미터 정보 `default_action_parameters`.
-        (선택) `target_group` - 리스너에 매핑시킬 target group 이름.
         (선택) `status_code` - 고정 응답에 대한 status code. `2XX`, `4XX`, `5XX. `default_action_type` 이 `FIXED_RESPONSE` 일때만 설정.
-        (선택) `content_type` - 응답에 대한 `Content-Type`. `text/plain`, `text/css`, `text/html`, `application/javascript`, `application/json`. `default_action_type` 이 `FIXED_RESPONSE` 일때만 설정. 
+        (선택) `content_type` - 응답에 대한 `Content-Type`. `text/plain`, `text/css`, `text/html`, `application/javascript`, `application/json`. `default_action_type` 이 `FIXED_RESPONSE` 일때만 설정.
         (선택) `data` - Body 메세지 설정. `default_action_type` 이 `FIXED_RESPONSE` 일때만 설정.
         (선택) `protocol` - 리다이렉션 Url 프로토콜. `HTTP`, `HTTPS`, or `#{protocol}`. Defaults: `#{protocol}`. `default_action_type` 이 `REDIRECT_301` or `REDIRECT_302` 일때만 설정.
         (선택) `host` - 리다이렉션 Url 호스트 이름. Defaults: `#{host}`. `default_action_type` 이 `REDIRECT_301` or `REDIRECT_302` 일때만 설정.
@@ -233,14 +231,79 @@ variable "listeners" {
           (필수) `target_group` - 리스너에 매핑시킬 target group 이름.
           (선택) `weight` - target group 에 대한 traffic weight `0` 부터 `999` 설정 가능. Default: `1`.
       (선택) `stickiness_duration` - 규칙의 대상 그룹으로 고정으로 라우팅 되기 위한 설정. `0` 부터 `604800` 설정가능. Default: `0`. `default_action_type` 이 `WEIGHTED_FORWARD` 일때만 설정.
-    (선택) `tls` - The configuration for TLS listener of the load balancer. 필수 if `protocol` is `HTTPS`. `tls` block as defined below.
+    (선택) `tls` - TLS Listener 에 필요한 설정. `protocol` 이 `HTTPS` 일때 사용. `tls` 블록 내용.
       (선택) `certificate` - SSL certificate arn.
       (선택) `additional_certificates` - 리스너에 연결될 인증서 arn 세트.
       (선택) `security_policy` - SSL(Secure Socket Layer) 협상 구성에 대한 보안 정책의 이름. 프로토콜이 `HTTPS` 일때만 사용. Default: `ELBSecurityPolicy-2016-08`.
   EOF
-  type        = any
-  default     = []
-  nullable    = false
+  type = list(object({
+    port                = optional(number)
+    protocol            = optional(string)
+    default_action_type = optional(string)
+    default_action_parameters = optional(object({
+      order                               = optional(number, null)
+      target_group                        = optional(string)
+      status_code                         = optional(string, null)
+      content_type                        = optional(string, null)
+      data                                = optional(string, null)
+      protocol                            = optional(string, null)
+      host                                = optional(string, null)
+      port                                = optional(number, null)
+      path                                = optional(string, null)
+      query                               = optional(string, null)
+      authentication_request_extra_params = optional(string, null)
+      on_unauthenticated_request          = optional(string, null)
+      scope                               = optional(string, null)
+      session_cookie_name                 = optional(string, null)
+      session_timeout                     = optional(string, null)
+      user_pool_arn                       = optional(string, null)
+      user_pool_client_id                 = optional(string, null)
+      user_pool_domain                    = optional(string, null)
+      authorization_endpoint              = optional(string, null)
+      client_id                           = optional(string, null)
+      client_secret                       = optional(string, null)
+      issuer                              = optional(string, null)
+      token_endpoint                      = optional(string, null)
+      user_info_endpoint                  = optional(string, null)
+      targets = optional(list(object({
+        target_group = optional(string)
+        weight       = optional(number, 1)
+      })), [])
+      stickiness_duration = optional(number, 0)
+    }), {})
+    rules = optional(list(object({
+      priority            = optional(number)
+      stickiness_duration = optional(number, 0)
+      conditions = optional(list(object({
+        type   = optional(string)
+        name   = optional(string, null)
+        values = optional(set(string))
+      })), [])
+      action_type = optional(string)
+      action_parameters = optional(object({
+        target_group = optional(string)
+        status_code  = optional(string, null)
+        content_type = optional(string, null)
+        data         = optional(string, null)
+        protocol     = optional(string, null)
+        host         = optional(string, null)
+        port         = optional(string, null)
+        path         = optional(string, null)
+        query        = optional(string, null)
+        targets = optional(list(object({
+          target_group = optional(string)
+          weight       = optional(number, 1)
+        })), [])
+      }), {})
+    })), [])
+    tls = optional(object({
+      certificate             = optional(string)
+      additional_certificates = optional(set(string), [])
+      security_policy         = optional(string, "ELBSecurityPolicy-2016-08")
+    }), {})
+  }))
+  default  = []
+  nullable = false
 }
 
 ###################################################
@@ -248,7 +311,7 @@ variable "listeners" {
 ###################################################
 variable "target_groups" {
   description = <<EOF
-  (선택) target group 에 대한 Map 리스트 정보. `target_groups` 블록 내용
+  (선택) target group 에 대한 Map 리스트 정보. `target_groups` 블록 내용.
     (필수) `target_type` - target group 에 대한 type. 다음 중 선택 가능 `lambda`, `ip`, `instance`.
     (선택) `ip_address_type` - target group 에서 사용하는 IP 주소 유형. 다음중 선택 가능 `ipv4`, `ipv6`. `target_type` 이 `ip` 일때만 설정.
     (선택) `port` - 대상에 대한 수신 포트. `target_type` 이 `instance`, `ip` 일때만 설정.
@@ -266,7 +329,7 @@ variable "target_groups" {
       (선택) `healthy_threshold` - 정상으로 간주하기 위한 연속 상태 확인 성공 횟수. `5` 부터 `300` 설정 가능. `lambda`의 경우 `lambda` 만 설정.
       (선택) `interval` - 대상 확인에 대한 상태 확인 시간(초). `5` 부터 `300` 설정 가능. `lambda`의 경우 `lambda` 만 설정.
       (선택) `matcher` - 대상에 대한 성공 코드. `200,202` or `200-299` 와 같이 설정 가능. GRPC 의 경우 `0` 부터 `99` 설정. `HTTP`, `HTTPS` 의 경우 `200` 부터 `499` 까지 설정.
-      (선택) `path` - 상태 요청에 대한 path.
+      (선택) `path` - 상태 요청에 대한 path. Default: `/`
       (선택) `port` - 상태 확인에 대한 port 정보. `traffic-port`, `1` 에서 `65546` 까지 설정 가능.
       (선택) `protocol` - 상태 검사에 대한 protocol.
       (선택) `timeout` - 대상으로 부터 응답이 없으면 상태 확인 실패 의미하는 시간(초). `2` 부터 `120` 까지 설정 가능.
@@ -287,9 +350,50 @@ variable "target_groups" {
       (선택) `lambda_source_account` - lambda source account ID - `target_type` 이 `lambda` 일 경우에 사용.
       (선택) `lambda_event_source_token` - lambda event token - `target_type` 이 `lambda` 일 경우에 사용.
   EOF
-  type        = any
-  default     = {}
-  nullable    = false
+  type = map(object({
+    target_type                        = optional(string)
+    ip_address_type                    = optional(string, null)
+    port                               = optional(number, null)
+    protocol                           = optional(string, null)
+    deregistration_delay               = optional(number, 300)
+    slow_start                         = optional(number, 0)
+    load_balancing_algorithm_type      = optional(string, "least_outstanding_requests")
+    lambda_multi_value_headers_enabled = optional(string, null)
+    load_balancing_anomaly_mitigation  = optional(string, null)
+    load_balancing_cross_zone_enabled  = optional(string, null)
+    protocol_version                   = optional(string, null)
+    preserve_client_ip                 = optional(bool, null)
+    health_check = optional(object({
+      enabled             = optional(bool, true)
+      healthy_threshold   = optional(number, 3)
+      interval            = optional(number, 10)
+      unhealthy_threshold = optional(number, 3)
+      matcher             = optional(string, null)
+      path                = optional(string, "/")
+      port                = optional(number, null)
+      protocol            = optional(string, null)
+      timeout             = optional(number, 30)
+    }), {})
+    stickiness = optional(object({
+      enabled           = optional(bool, false)
+      type              = optional(string, "lb_cookie")
+      cookie_duration   = optional(number, null)
+      stickiness_cookie = optional(string, null)
+    }), {})
+    targets = optional(map(object({
+      target_id                 = optional(string)
+      port                      = optional(number, null)
+      availability_zone         = optional(string, null)
+      lambda_function_name      = optional(string, null)
+      lambda_qualifier          = optional(string, null)
+      lambda_action             = optional(string, null)
+      lambda_principal          = optional(string, null)
+      lambda_source_account     = optional(string, null)
+      lambda_event_source_token = optional(string, null)
+    })), {})
+  }))
+  default  = {}
+  nullable = false
 }
 
 ###################################################
@@ -367,4 +471,3 @@ variable "security_groups" {
   default     = []
   nullable    = false
 }
-
