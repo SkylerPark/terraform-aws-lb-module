@@ -19,7 +19,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type             = "forward"
-      order            = default_action.value.order
+      order            = try(try(default_action.value.order, null), null)
       target_group_arn = aws_lb_target_group.this[default_action.value.target_group].arn
     }
   }
@@ -33,7 +33,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "forward"
-      order = default_action.value.order
+      order = try(default_action.value.order, null)
 
       forward {
         dynamic "target_group" {
@@ -65,7 +65,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "fixed-response"
-      order = default_action.value.order
+      order = try(default_action.value.order, null)
 
       fixed_response {
         status_code  = try(default_action.value.status_code, 503)
@@ -84,7 +84,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "authenticate-cognito"
-      order = default_action.value.order
+      order = try(default_action.value.order, null)
 
       authenticate_cognito {
         authentication_request_extra_params = try(default_action.value.authentication_request_extra_params, null)
@@ -108,7 +108,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "authenticate-oidc"
-      order = default_action.value.order
+      order = try(default_action.value.order, null)
 
       authenticate_oidc {
         authentication_request_extra_params = try(default_action.value.authentication_request_extra_params, null)
@@ -135,7 +135,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "redirect"
-      order = default_action.value.order
+      order = try(default_action.value.order, null)
 
       redirect {
         status_code = "HTTP_301"
@@ -157,7 +157,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "redirect"
-      order = default_action.value.order
+      order = try(default_action.value.order, null)
 
       redirect {
         status_code = "HTTP_302"

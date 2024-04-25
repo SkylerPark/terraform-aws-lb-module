@@ -172,7 +172,7 @@ variable "xff_header" {
 ###################################################
 variable "listeners" {
   description = <<EOF
-  (선택) load balancer 리스너 목록 입니다. `listener` 블록 내용.
+  (선택) load balancer 리스너 목록 입니다. `listeners` 블록 내용.
     (필수) `port` - load balancer 리스너 포트 정보.
     (필수) `protocol` - load balancer 리스너 protocol 정보. 가능 한 값`HTTP` and `HTTPS`.
     (필수) `default_action_type` - 리스너 default action 에 대한 정보 `FORWARD`, `WEIGHTED_FORWARD`, `AUTHENTICATE_COGNITO`, `AUTHENTICATE_OIDC`, `FIXED_RESPONSE`, `REDIRECT_301`, `REDIRECT_302`.
@@ -217,60 +217,17 @@ variable "listeners" {
         (필수) `values` for `QUERY` - 일치시킬 쿼리 문자열 쌍 목록.
         (필수) `values` for `SOURCE_IP` -일치시킬 IP CIDR 목록.
       (필수) `action_type` - 라우팅 작업에 대한 유형 `FORWARD`, `WEIGHTED_FORWARD`, `FIXED_RESPONSE`, `REDIRECT_301` and `REDIRECT_302`.
-      (선택) `action_parameters` - default action 에 대한 파타미터 정보 `default_action_parameters`.
-        (선택) `status_code` - 고정 응답에 대한 status code. `2XX`, `4XX`, `5XX. `default_action_type` 이 `FIXED_RESPONSE` 일때만 설정.
-        (선택) `content_type` - 응답에 대한 `Content-Type`. `text/plain`, `text/css`, `text/html`, `application/javascript`, `application/json`. `default_action_type` 이 `FIXED_RESPONSE` 일때만 설정.
-        (선택) `data` - Body 메세지 설정. `default_action_type` 이 `FIXED_RESPONSE` 일때만 설정.
-        (선택) `protocol` - 리다이렉션 Url 프로토콜. `HTTP`, `HTTPS`, or `#{protocol}`. Defaults: `#{protocol}`. `default_action_type` 이 `REDIRECT_301` or `REDIRECT_302` 일때만 설정.
-        (선택) `host` - 리다이렉션 Url 호스트 이름. Defaults: `#{host}`. `default_action_type` 이 `REDIRECT_301` or `REDIRECT_302` 일때만 설정.
-        (선택) `port` - 리다이렉션 Url 포트 정보 `1` to `65535` or `#{port}`. Defaults: `#{port}`. `default_action_type` 이 `REDIRECT_301` or `REDIRECT_302` 일때만 설정.
-        (선택) `path` - 리다이렉션 Url 패스 정보 `/`. 다음 값이 포함 가능.`#{host}`, `#{path}`, and `#{port}`. Defaults: `/#{path}`. `default_action_type` 이 `REDIRECT_301` or `REDIRECT_302` 일때만 설정.
-        (선택) `query` - 리다이렉션 Url 쿼리 변수가 필요한 경우 설정. Defaults: `#{query}`. `default_action_type` 이 `REDIRECT_301` or `REDIRECT_302` 일때만 설정.
-        (선택) `target_group` - Target Group 에 대한 이름. `default_action_type` 이 `WEIGHTED_FORWARD`, `FORWARD` 일때만 설정.
-        (필수) `targets` - target group 리스트. `targets` 블록 내용. `default_action_type` 이 `FORWARD`, `WEIGHTED_FORWARD` 일때만 설정.
-          (필수) `target_group` - 리스너에 매핑시킬 target group 이름.
-          (선택) `weight` - target group 에 대한 traffic weight `0` 부터 `999` 설정 가능. Default: `1`.
-      (선택) `stickiness_duration` - 규칙의 대상 그룹으로 고정으로 라우팅 되기 위한 설정. `0` 부터 `604800` 설정가능. Default: `0`. `default_action_type` 이 `WEIGHTED_FORWARD` 일때만 설정.
+      (선택) `action_parameters` - `default_action_parameters` 와 동일.
     (선택) `tls` - TLS Listener 에 필요한 설정. `protocol` 이 `HTTPS` 일때 사용. `tls` 블록 내용.
       (선택) `certificate` - SSL certificate arn.
       (선택) `additional_certificates` - 리스너에 연결될 인증서 arn 세트.
       (선택) `security_policy` - SSL(Secure Socket Layer) 협상 구성에 대한 보안 정책의 이름. 프로토콜이 `HTTPS` 일때만 사용. Default: `ELBSecurityPolicy-2016-08`.
   EOF
   type = list(object({
-    port                = optional(number)
-    protocol            = optional(string)
-    default_action_type = optional(string)
-    default_action_parameters = optional(object({
-      order                               = optional(number, null)
-      target_group                        = optional(string)
-      status_code                         = optional(string, null)
-      content_type                        = optional(string, null)
-      data                                = optional(string, null)
-      protocol                            = optional(string, null)
-      host                                = optional(string, null)
-      port                                = optional(number, null)
-      path                                = optional(string, null)
-      query                               = optional(string, null)
-      authentication_request_extra_params = optional(string, null)
-      on_unauthenticated_request          = optional(string, null)
-      scope                               = optional(string, null)
-      session_cookie_name                 = optional(string, null)
-      session_timeout                     = optional(string, null)
-      user_pool_arn                       = optional(string, null)
-      user_pool_client_id                 = optional(string, null)
-      user_pool_domain                    = optional(string, null)
-      authorization_endpoint              = optional(string, null)
-      client_id                           = optional(string, null)
-      client_secret                       = optional(string, null)
-      issuer                              = optional(string, null)
-      token_endpoint                      = optional(string, null)
-      user_info_endpoint                  = optional(string, null)
-      targets = optional(list(object({
-        target_group = optional(string)
-        weight       = optional(number, 1)
-      })), [])
-      stickiness_duration = optional(number, 0)
-    }), {})
+    port                      = optional(number)
+    protocol                  = optional(string)
+    default_action_type       = optional(string)
+    default_action_parameters = any
     rules = optional(list(object({
       priority            = optional(number)
       stickiness_duration = optional(number, 0)
@@ -279,22 +236,8 @@ variable "listeners" {
         name   = optional(string, null)
         values = optional(set(string))
       })), [])
-      action_type = optional(string)
-      action_parameters = optional(object({
-        target_group = optional(string)
-        status_code  = optional(string, null)
-        content_type = optional(string, null)
-        data         = optional(string, null)
-        protocol     = optional(string, null)
-        host         = optional(string, null)
-        port         = optional(string, null)
-        path         = optional(string, null)
-        query        = optional(string, null)
-        targets = optional(list(object({
-          target_group = optional(string)
-          weight       = optional(number, 1)
-        })), [])
-      }), {})
+      action_type       = optional(string)
+      action_parameters = any
     })), [])
     tls = optional(object({
       certificate             = optional(string)
