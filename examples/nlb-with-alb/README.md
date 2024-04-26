@@ -23,12 +23,15 @@
 | <a name="module_instance"></a> [instance](#module\_instance) | git::https://github.com/SkylerPark/terraform-aws-ec2-module.git//modules/instance/ | tags/1.1.2 |
 | <a name="module_nat_gateway"></a> [nat\_gateway](#module\_nat\_gateway) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/nat-gateway/ | tags/1.1.0 |
 | <a name="module_nlb"></a> [nlb](#module\_nlb) | ../../modules/nlb | n/a |
+| <a name="module_parksm_alb_tg_http"></a> [parksm\_alb\_tg\_http](#module\_parksm\_alb\_tg\_http) | ../../modules/nlb-target-group | n/a |
+| <a name="module_parksm_alb_tg_https"></a> [parksm\_alb\_tg\_https](#module\_parksm\_alb\_tg\_https) | ../../modules/nlb-target-group | n/a |
 | <a name="module_private_route_table"></a> [private\_route\_table](#module\_private\_route\_table) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/route-table/ | tags/1.1.0 |
 | <a name="module_private_subnet_group"></a> [private\_subnet\_group](#module\_private\_subnet\_group) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/subnet-group/ | tags/1.1.0 |
 | <a name="module_public_route_table"></a> [public\_route\_table](#module\_public\_route\_table) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/route-table/ | tags/1.1.0 |
 | <a name="module_public_subnet_group"></a> [public\_subnet\_group](#module\_public\_subnet\_group) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/subnet-group/ | tags/1.1.0 |
 | <a name="module_security_group"></a> [security\_group](#module\_security\_group) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/security-group/ | tags/1.1.0 |
 | <a name="module_ssh_key"></a> [ssh\_key](#module\_ssh\_key) | git::https://github.com/SkylerPark/terraform-aws-ec2-module.git//modules/key-pair/ | tags/1.1.2 |
+| <a name="module_target_group_v1"></a> [target\_group\_v1](#module\_target\_group\_v1) | ../../modules/alb-target-group | n/a |
 | <a name="module_vpc"></a> [vpc](#module\_vpc) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/vpc/ | tags/1.1.0 |
 
 ## Resources

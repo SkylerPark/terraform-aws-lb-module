@@ -74,36 +74,39 @@ module "alb" {
         certificate = "arn:aws:acm:Region:444455556666:certificate/certificate_ID"
       }
       default_action_parameters = {
-        target_group = "parksm-instance"
+        target_group = module.target_group_v1.arn
       }
     }
   ]
+}
 
-  target_groups = {
-    parksm-instance = {
-      target_type      = "instance"
-      port             = 8080
-      protocol         = "HTTP"
-      protocol_version = "HTTP1"
+module "target_group_v1" {
+  source           = "../../modules/alb-target-group"
+  name             = "parksm-tg"
+  target_type      = "instance"
+  port             = 8080
+  protocol         = "HTTP"
+  protocol_version = "HTTP1"
+  vpc_id           = module.vpc.id
 
-      health_check = {
-        protocol = "HTTP"
-        port     = 80
-        path     = "/health"
+  health_check = {
+    protocol = "HTTP"
+    port     = 80
+    path     = "/health"
 
-        interval            = 10
-        timeout             = 5
-        healthy_threshold   = 5
-        unhealthy_threshold = 2
-      }
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
 
-      stickiness_enabled            = false
-      load_balancing_algorithm_type = "least_outstanding_requests"
-      targets = {
-        for instance, value in local.instances : "parksm-rnd-test-${instance}" => {
-          target_id = module.instance[instance].id
-        } if value.is_lb
-      }
-    }
+  stickiness = {
+    enabled = false
+  }
+  load_balancing_algorithm_type = "least_outstanding_requests"
+  targets = {
+    for instance, value in local.instances : "parksm-rnd-test-${instance}" => {
+      target_id = module.instance[instance].id
+    } if value.is_lb
   }
 }

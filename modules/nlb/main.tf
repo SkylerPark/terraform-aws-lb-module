@@ -54,3 +54,27 @@ resource "aws_lb" "this" {
     var.tags
   )
 }
+
+module "listener" {
+  source = "../nlb-listener"
+
+  for_each = {
+    for listener in var.listeners :
+    listener.port => listener
+  }
+
+  load_balancer = aws_lb.this.arn
+
+  port         = each.key
+  protocol     = each.value.protocol
+  target_group = each.value.target_group
+
+  tls = {
+    certificate             = each.value.tls.certificate
+    additional_certificates = each.value.tls.additional_certificates
+    security_policy         = each.value.tls.security_policy
+    alpn_policy             = each.value.tls.alpn_policy
+  }
+
+  tags = var.tags
+}

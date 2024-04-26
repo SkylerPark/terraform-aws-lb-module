@@ -57,41 +57,42 @@ module "nlb" {
     {
       port         = 80
       protocol     = "TCP"
-      target_group = "parksm-instance"
+      target_group = module.target_group_v1.arn
     },
     {
       port         = 443
       protocol     = "TCP" # Note: TLS 로 설정시 tls.certificate 인증서 발급 후 설정 현재는 임시로 설정
-      target_group = "parksm-instance"
+      target_group = module.target_group_v1.arn
       tls = {
         certificate = "arn:aws:acm:Region:444455556666:certificate/certificate_ID"
       }
     }
   ]
+}
 
-  target_groups = {
-    parksm-instance = {
-      target_type = "instance"
-      port        = 8080
-      protocol    = "TCP"
+module "target_group_v1" {
+  source      = "../../modules/nlb-target-group"
+  name        = "parksm-tg"
+  target_type = "instance"
+  port        = 8080
+  protocol    = "TCP"
+  vpc_id      = module.vpc.id
 
-      health_check = {
-        protocol = "HTTP"
-        port     = 80
-        path     = "/health"
+  health_check = {
+    protocol = "HTTP"
+    port     = 80
+    path     = "/health"
 
-        interval            = 10
-        timeout             = 5
-        healthy_threshold   = 5
-        unhealthy_threshold = 2
-      }
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
 
-      stickiness_enabled = false
-      targets = {
-        for instance, value in local.instances : "parksm-rnd-test-${instance}" => {
-          target_id = module.instance[instance].id
-        } if value.is_lb
-      }
-    }
+  stickiness_enabled = false
+  targets = {
+    for instance, value in local.instances : "parksm-rnd-test-${instance}" => {
+      target_id = module.instance[instance].id
+    } if value.is_lb
   }
 }

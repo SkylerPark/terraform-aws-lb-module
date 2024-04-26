@@ -53,64 +53,69 @@ module "nlb" {
     {
       port         = 80
       protocol     = "TCP"
-      target_group = "parksm-alb-80"
+      target_group = module.parksm_alb_tg_http.arn
     },
     {
       port         = 443
       protocol     = "TCP" # Note: TLS 로 설정시 tls.certificate 인증서 발급 후 설정 현재는 임시로 설정
-      target_group = "parksm-alb-443"
+      target_group = module.parksm_alb_tg_https.arn
       tls = {
         certificate = "arn:aws:acm:Region:444455556666:certificate/certificate_ID"
       }
     }
   ]
+}
 
-  target_groups = {
-    parksm-alb-80 = {
-      target_type = "alb"
-      port        = 80
-      protocol    = "TCP"
+module "parksm_alb_tg_http" {
+  source      = "../../modules/nlb-target-group"
+  name        = "parksm-alb-tg"
+  target_type = "alb"
+  port        = 80
+  protocol    = "TCP"
+  vpc_id      = module.vpc.id
 
-      health_check = {
-        protocol = "HTTP"
-        port     = 80
-        path     = "/health"
+  health_check = {
+    protocol = "HTTP"
+    port     = 80
+    path     = "/health"
 
-        interval            = 10
-        timeout             = 5
-        healthy_threshold   = 5
-        unhealthy_threshold = 2
-      }
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
 
-      stickiness_enabled = false
-      targets = {
-        "parksm-alb-instance" = {
-          target_id = module.alb.arn
-        }
-      }
+  stickiness_enabled = false
+  targets = {
+    parksm-alb = {
+      target_id = module.alb.arn
     }
-    parksm-alb-443 = {
-      target_type = "alb"
-      port        = 443
-      protocol    = "TCP"
+  }
+}
 
-      health_check = {
-        protocol = "HTTP"
-        port     = 443
-        path     = "/health"
+module "parksm_alb_tg_https" {
+  source      = "../../modules/nlb-target-group"
+  name        = "parksm-alb-tg"
+  target_type = "alb"
+  port        = 443
+  protocol    = "TCP"
+  vpc_id      = module.vpc.id
 
-        interval            = 10
-        timeout             = 5
-        healthy_threshold   = 5
-        unhealthy_threshold = 2
-      }
+  health_check = {
+    protocol = "HTTP"
+    port     = 443
+    path     = "/health"
 
-      stickiness_enabled = false
-      targets = {
-        "parksm-alb-instance" = {
-          target_id = module.alb.arn
-        }
-      }
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
+
+  stickiness_enabled = false
+  targets = {
+    parksm-alb = {
+      target_id = module.alb.arn
     }
   }
 }

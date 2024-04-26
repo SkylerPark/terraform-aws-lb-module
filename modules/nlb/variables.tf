@@ -136,66 +136,6 @@ variable "listeners" {
 }
 
 ###################################################
-# Target Group(s)
-###################################################
-variable "target_groups" {
-  description = <<EOF
-  (선택) target group 에 대한 Map 리스트 정보. `target_groups` 블록 내용.
-    (필수) `target_type` - target group 에 대한 type. 다음 중 선택 가능 `ip`, `alb`, `instance`.
-    (선택) `ip_address_type` - target group 에서 사용하는 IP 주소 유형. 다음중 선택 가능 `ipv4`, `ipv6`. `target_type` 이 `ip` 일때만 설정.
-    (선택) `port` - 대상에 대한 수신 포트. `target_type` 이 `instance`, `ip` 일때만 설정.
-    (선택) `protocol` - 대상에 대한 수신 프로토콜. 다음중 선택 가능 `TCP`, `HTTP`, `HTTPS` `target_type` 이 `instance`, `ip`, `alb` 일때만 설정.
-    (선택) `proxy_protocol_v2` - 프록시 프로토콜v2 에 대한 지원 활성화 여부. Default: `false`.
-    (선택) `preserve_client_ip` - 클라이언트 IP 보존 활성화 여부. 문서 참고 `https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#client-ip-preservation`
-    (선택) `connection_termination` - 등록시간이 초과되면 연결을 종료할지 여부. Default: `false`.
-    (선택) `deregistration_delay` - 대상에 대한 드레에닝 설정. `0` 부터 `3600`(초) 설정 가능. Default: 300
-    (선택) `stickiness_enabled` - sticky session 활성화 여부. Default: false
-    (선택) `health_check` - 타겟 그룹에 타겟에 대한 health check 정보. `health_check` 블록 내용.
-      (선택) `enabled` - health check 를 활성화에 대한 여부.
-      (선택) `healthy_threshold` - 정상으로 간주하기 위한 연속 상태 확인 성공 횟수. `5` 부터 `300` 설정 가능. `lambda`의 경우 `lambda` 만 설정.
-      (선택) `interval` - 대상 확인에 대한 상태 확인 시간(초). `5` 부터 `300` 설정 가능. `lambda`의 경우 `lambda` 만 설정.
-      (선택) `matcher` - 대상에 대한 성공 코드. `200,202` or `200-299` 와 같이 설정 가능. GRPC 의 경우 `0` 부터 `99` 설정. `HTTP`, `HTTPS` 의 경우 `200` 부터 `499` 까지 설정.
-      (선택) `path` - 상태 요청에 대한 path. Default: `/`
-      (선택) `port` - 상태 확인에 대한 port 정보. `traffic-port`, `1` 에서 `65546` 까지 설정 가능.
-      (선택) `protocol` - 상태 검사에 대한 protocol.
-      (선택) `timeout` - 대상으로 부터 응답이 없으면 상태 확인 실패 의미하는 시간(초). `2` 부터 `120` 까지 설정 가능.
-    (선택) 대상 그룹에 추가할 대상 집합. `targets` 블록 내용.
-      (필수) `target_id` - 대상에 대한 ID 값.
-      (선택) `port` - 대상에 대한 port.
-      (선택) `availability_zone` - 대상에 대한 zone 영역.
-  EOF
-  type = map(object({
-    target_type            = optional(string)
-    ip_address_type        = optional(string, null)
-    port                   = optional(number, null)
-    protocol               = optional(string, null)
-    proxy_protocol_v2      = optional(bool, false)
-    preserve_client_ip     = optional(bool, null)
-    connection_termination = optional(bool, false)
-    deregistration_delay   = optional(number, 300)
-    stickiness_enabled     = optional(bool, false)
-    health_check = optional(object({
-      enabled             = optional(bool, true)
-      healthy_threshold   = optional(number, 3)
-      interval            = optional(number, 10)
-      unhealthy_threshold = optional(number, 3)
-      matcher             = optional(string, null)
-      path                = optional(string, "/")
-      port                = optional(number, null)
-      protocol            = optional(string, null)
-      timeout             = optional(number, 30)
-    }), {})
-    targets = optional(map(object({
-      target_id         = optional(string)
-      port              = optional(number, null)
-      availability_zone = optional(string, null)
-    })), {})
-  }))
-  default  = {}
-  nullable = false
-}
-
-###################################################
 # Security Group
 ###################################################
 variable "default_security_group" {

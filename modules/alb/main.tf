@@ -58,3 +58,33 @@ resource "aws_lb" "this" {
     var.tags
   )
 }
+
+###################################################
+# Listeners for Application Load Balancer
+###################################################
+module "listener" {
+  source = "../alb-listener"
+
+  for_each = {
+    for listener in var.listeners :
+    listener.port => listener
+  }
+
+  load_balancer = aws_lb.this.arn
+
+  port     = each.key
+  protocol = each.value.protocol
+
+  default_action_type       = each.value.default_action_type
+  default_action_parameters = each.value.default_action_parameters
+
+  rules = try(each.value.rules, {})
+
+  tls = {
+    certificate             = try(each.value.tls.certificate, null)
+    additional_certificates = try(each.value.tls.additional_certificates, [])
+    security_policy         = try(each.value.tls.security_policy, "ELBSecurityPolicy-2016-08")
+  }
+
+  tags = var.tags
+}

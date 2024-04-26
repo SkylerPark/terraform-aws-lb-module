@@ -22,7 +22,11 @@ Terraform 모듈을 사용하여 아래 서비스를 관리 합니다.
 
 - **AWS LB (Load Balancer)**
   - nlb
+  - nlb-target-group
+  - nlb-listener
   - alb
+  - alb-target-group
+  - alb-listener
 
 ## Usage
 
@@ -105,37 +109,40 @@ module "alb" {
         certificate = "arn:aws:acm:Region:444455556666:certificate/certificate_ID"
       }
       default_action_parameters = {
-        target_group = "parksm-instance"
+        target_group = module.target_group_v1.arn
       }
     }
   ]
+}
 
-  target_groups = {
-    parksm-instance = {
-      target_type      = "instance"
-      port             = 8080
-      protocol         = "HTTP"
-      protocol_version = "HTTP1"
+module "target_group_v1" {
+  source           = "../../modules/alb-target-group"
+  name             = "parksm-tg"
+  target_type      = "instance"
+  port             = 8080
+  protocol         = "HTTP"
+  protocol_version = "HTTP1"
+  vpc_id           = module.vpc.id
 
-      health_check = {
-        protocol = "HTTP"
-        port     = 80
-        path     = "/health"
+  health_check = {
+    protocol = "HTTP"
+    port     = 80
+    path     = "/health"
 
-        interval            = 10
-        timeout             = 5
-        healthy_threshold   = 5
-        unhealthy_threshold = 2
-      }
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
 
-      stickiness_enabled            = false
-      load_balancing_algorithm_type = "least_outstanding_requests"
-      targets = {
-        for instance, value in local.instances : "parksm-rnd-test-${instance}" => {
-          target_id = module.instance[instance].id
-        } if value.is_lb
-      }
-    }
+  stickiness = {
+    enabled = false
+  }
+  load_balancing_algorithm_type = "least_outstanding_requests"
+  targets = {
+    for instance, value in local.instances : "parksm-rnd-test-${instance}" => {
+      target_id = module.instance[instance].id
+    } if value.is_lb
   }
 }
 ```
@@ -200,45 +207,45 @@ module "nlb" {
     {
       port         = 80
       protocol     = "TCP"
-      target_group = "parksm-instance"
+      target_group = module.target_group_v1.arn
     },
     {
       port         = 443
       protocol     = "TCP" # Note: TLS 로 설정시 tls.certificate 인증서 발급 후 설정 현재는 임시로 설정
-      target_group = "parksm-instance"
+      target_group = module.target_group_v1.arn
       tls = {
         certificate = "arn:aws:acm:Region:444455556666:certificate/certificate_ID"
       }
     }
   ]
-
-  target_groups = {
-    parksm-instance = {
-      target_type = "instance"
-      port        = 8080
-      protocol    = "TCP"
-
-      health_check = {
-        protocol = "HTTP"
-        port     = 80
-        path     = "/health"
-
-        interval            = 10
-        timeout             = 5
-        healthy_threshold   = 5
-        unhealthy_threshold = 2
-      }
-
-      stickiness_enabled = false
-      targets = {
-        for instance, value in local.instances : "parksm-rnd-test-${instance}" => {
-          target_id = module.instance[instance].id
-        } if value.is_lb
-      }
-    }
-  }
 }
 
+module "target_group_v1" {
+  source      = "../../modules/nlb-target-group"
+  name        = "parksm-tg"
+  target_type = "instance"
+  port        = 8080
+  protocol    = "TCP"
+  vpc_id      = module.vpc.id
+
+  health_check = {
+    protocol = "HTTP"
+    port     = 80
+    path     = "/health"
+
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
+
+  stickiness_enabled = false
+  targets = {
+    for instance, value in local.instances : "parksm-rnd-test-${instance}" => {
+      target_id = module.instance[instance].id
+    } if value.is_lb
+  }
+}
 ```
 
 ### nlb with alb
@@ -318,35 +325,40 @@ module "alb" {
         certificate = "arn:aws:acm:Region:444455556666:certificate/certificate_ID"
       }
       default_action_parameters = {
-        target_group = "parksm-instance"
+        target_group = module.target_group_v1.arn
       }
     }
   ]
+}
 
-  target_groups = {
-    parksm-instance = {
-      target_type      = "instance"
-      port             = 8080
-      protocol         = "HTTP"
-      protocol_version = "HTTP1"
+module "target_group_v1" {
+  source           = "../../modules/alb-target-group"
+  name             = "parksm-tg"
+  target_type      = "instance"
+  port             = 8080
+  protocol         = "HTTP"
+  protocol_version = "HTTP1"
+  vpc_id           = module.vpc.id
 
-      health_check = {
-        protocol = "HTTP"
-        port     = 80
-        path     = "/health"
+  health_check = {
+    protocol = "HTTP"
+    port     = 80
+    path     = "/health"
 
-        interval            = 10
-        timeout             = 5
-        healthy_threshold   = 5
-        unhealthy_threshold = 2
-      }
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
 
-      stickiness_enabled            = false
-      load_balancing_algorithm_type = "least_outstanding_requests"
-      targets = {
-        for instance, value in local.instances : "parksm-rnd-test-${instance}" => module.instance[instance].id if value.is_lb
-      }
-    }
+  stickiness = {
+    enabled = false
+  }
+  load_balancing_algorithm_type = "least_outstanding_requests"
+  targets = {
+    for instance, value in local.instances : "parksm-rnd-test-${instance}" => {
+      target_id = module.instance[instance].id
+    } if value.is_lb
   }
 }
 
@@ -405,64 +417,69 @@ module "nlb" {
     {
       port         = 80
       protocol     = "TCP"
-      target_group = "parksm-alb-80"
+      target_group = module.parksm_alb_tg_http.arn
     },
     {
       port         = 443
       protocol     = "TCP" # Note: TLS 로 설정시 tls.certificate 인증서 발급 후 설정 현재는 임시로 설정
-      target_group = "parksm-alb-443"
+      target_group = module.parksm_alb_tg_https.arn
       tls = {
         certificate = "arn:aws:acm:Region:444455556666:certificate/certificate_ID"
       }
     }
   ]
+}
 
-  target_groups = {
-    parksm-alb-80 = {
-      target_type = "alb"
-      port        = 80
-      protocol    = "TCP"
+module "parksm_alb_tg_http" {
+  source      = "../../modules/nlb-target-group"
+  name        = "parksm-alb-tg"
+  target_type = "alb"
+  port        = 80
+  protocol    = "TCP"
+  vpc_id      = module.vpc.id
 
-      health_check = {
-        protocol = "HTTP"
-        port     = 80
-        path     = "/health"
+  health_check = {
+    protocol = "HTTP"
+    port     = 80
+    path     = "/health"
 
-        interval            = 10
-        timeout             = 5
-        healthy_threshold   = 5
-        unhealthy_threshold = 2
-      }
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
 
-      stickiness_enabled = false
-      targets = {
-        "parksm-alb-instance" = {
-          target_id = module.alb.arn
-        }
-      }
+  stickiness_enabled = false
+  targets = {
+    parksm-alb = {
+      target_id = module.alb.arn
     }
-    parksm-alb-443 = {
-      target_type = "alb"
-      port        = 443
-      protocol    = "TCP"
+  }
+}
 
-      health_check = {
-        protocol = "HTTP"
-        port     = 443
-        path     = "/health"
+module "parksm_alb_tg_https" {
+  source      = "../../modules/nlb-target-group"
+  name        = "parksm-alb-tg"
+  target_type = "alb"
+  port        = 443
+  protocol    = "TCP"
+  vpc_id      = module.vpc.id
 
-        interval            = 10
-        timeout             = 5
-        healthy_threshold   = 5
-        unhealthy_threshold = 2
-      }
+  health_check = {
+    protocol = "HTTP"
+    port     = 443
+    path     = "/health"
 
-      stickiness_enabled = false
-      targets = {
-        "parksm-alb-instance" = {
-          target_id = module.alb.arn
-        }
-      }
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
+
+  stickiness_enabled = false
+  targets = {
+    parksm-alb = {
+      target_id = module.alb.arn
     }
   }
 }

@@ -18,6 +18,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_listener"></a> [listener](#module\_listener) | ../nlb-listener | n/a |
 | <a name="module_security_group"></a> [security\_group](#module\_security\_group) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/security-group/ | tags/1.1.0 |
 
 ## Resources
@@ -25,10 +26,6 @@
 | Name | Type |
 |------|------|
 | [aws_lb.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb) | resource |
-| [aws_lb_listener.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
-| [aws_lb_listener_certificate.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener_certificate) | resource |
-| [aws_lb_target_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
-| [aws_lb_target_group_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group_attachment) | resource |
 
 ## Inputs
 
@@ -47,7 +44,6 @@
 | <a name="input_security_group_evaluation_on_privatelink_enabled"></a> [security\_group\_evaluation\_on\_privatelink\_enabled](#input\_security\_group\_evaluation\_on\_privatelink\_enabled) | (선택) AWS PrivateLink 를 통해 NLB 로 전송되는 트래픽에 대한 인바운드 보안 그룹 규칙을 적용할지 여부. Default: `false` | `bool` | `false` | no |
 | <a name="input_security_groups"></a> [security\_groups](#input\_security\_groups) | (선택) load balancer 에 추가할 security group 리스트. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (선택) 리소스 태그 내용 | `map(string)` | `{}` | no |
-| <a name="input_target_groups"></a> [target\_groups](#input\_target\_groups) | (선택) target group 에 대한 Map 리스트 정보. `target_groups` 블록 내용.<br>    (필수) `target_type` - target group 에 대한 type. 다음 중 선택 가능 `ip`, `alb`, `instance`.<br>    (선택) `ip_address_type` - target group 에서 사용하는 IP 주소 유형. 다음중 선택 가능 `ipv4`, `ipv6`. `target_type` 이 `ip` 일때만 설정.<br>    (선택) `port` - 대상에 대한 수신 포트. `target_type` 이 `instance`, `ip` 일때만 설정.<br>    (선택) `protocol` - 대상에 대한 수신 프로토콜. 다음중 선택 가능 `TCP`, `HTTP`, `HTTPS` `target_type` 이 `instance`, `ip`, `alb` 일때만 설정.<br>    (선택) `proxy_protocol_v2` - 프록시 프로토콜v2 에 대한 지원 활성화 여부. Default: `false`.<br>    (선택) `preserve_client_ip` - 클라이언트 IP 보존 활성화 여부. 문서 참고 `https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#client-ip-preservation`<br>    (선택) `connection_termination` - 등록시간이 초과되면 연결을 종료할지 여부. Default: `false`.<br>    (선택) `deregistration_delay` - 대상에 대한 드레에닝 설정. `0` 부터 `3600`(초) 설정 가능. Default: 300<br>    (선택) `stickiness_enabled` - sticky session 활성화 여부. Default: false<br>    (선택) `health_check` - 타겟 그룹에 타겟에 대한 health check 정보. `health_check` 블록 내용.<br>      (선택) `enabled` - health check 를 활성화에 대한 여부.<br>      (선택) `healthy_threshold` - 정상으로 간주하기 위한 연속 상태 확인 성공 횟수. `5` 부터 `300` 설정 가능. `lambda`의 경우 `lambda` 만 설정.<br>      (선택) `interval` - 대상 확인에 대한 상태 확인 시간(초). `5` 부터 `300` 설정 가능. `lambda`의 경우 `lambda` 만 설정.<br>      (선택) `matcher` - 대상에 대한 성공 코드. `200,202` or `200-299` 와 같이 설정 가능. GRPC 의 경우 `0` 부터 `99` 설정. `HTTP`, `HTTPS` 의 경우 `200` 부터 `499` 까지 설정.<br>      (선택) `path` - 상태 요청에 대한 path. Default: `/`<br>      (선택) `port` - 상태 확인에 대한 port 정보. `traffic-port`, `1` 에서 `65546` 까지 설정 가능.<br>      (선택) `protocol` - 상태 검사에 대한 protocol.<br>      (선택) `timeout` - 대상으로 부터 응답이 없으면 상태 확인 실패 의미하는 시간(초). `2` 부터 `120` 까지 설정 가능.<br>    (선택) 대상 그룹에 추가할 대상 집합. `targets` 블록 내용.<br>      (필수) `target_id` - 대상에 대한 ID 값.<br>      (선택) `port` - 대상에 대한 port.<br>      (선택) `availability_zone` - 대상에 대한 zone 영역. | <pre>map(object({<br>    target_type            = optional(string)<br>    ip_address_type        = optional(string, null)<br>    port                   = optional(number, null)<br>    protocol               = optional(string, null)<br>    proxy_protocol_v2      = optional(bool, false)<br>    preserve_client_ip     = optional(bool, null)<br>    connection_termination = optional(bool, false)<br>    deregistration_delay   = optional(number, 300)<br>    stickiness_enabled     = optional(bool, false)<br>    health_check = optional(object({<br>      enabled             = optional(bool, true)<br>      healthy_threshold   = optional(number, 3)<br>      interval            = optional(number, 10)<br>      unhealthy_threshold = optional(number, 3)<br>      matcher             = optional(string, null)<br>      path                = optional(string, "/")<br>      port                = optional(number, null)<br>      protocol            = optional(string, null)<br>      timeout             = optional(number, 30)<br>    }), {})<br>    targets = optional(map(object({<br>      target_id         = optional(string)<br>      port              = optional(number, null)<br>      availability_zone = optional(string, null)<br>    })), {})<br>  }))</pre> | `{}` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (필수) load balancer 가 생성 될 VPC ID | `string` | n/a | yes |
 
 ## Outputs
@@ -62,11 +58,10 @@
 | <a name="output_domain"></a> [domain](#output\_domain) | load balancer DNS name. |
 | <a name="output_ip_address_type"></a> [ip\_address\_type](#output\_ip\_address\_type) | load balancer IP Type. |
 | <a name="output_is_public"></a> [is\_public](#output\_is\_public) | load balancer public 으로 할당중인지 여부 |
-| <a name="output_listener"></a> [listener](#output\_listener) | load balancer listener 정보 리스트 |
+| <a name="output_listeners"></a> [listeners](#output\_listeners) | load balancer listener 정보 리스트 |
 | <a name="output_name"></a> [name](#output\_name) | load balancer Name |
 | <a name="output_security_groups"></a> [security\_groups](#output\_security\_groups) | load balancer security group Ids. |
 | <a name="output_subnets"></a> [subnets](#output\_subnets) | load balancer 가 생성된 subnet IDs |
-| <a name="output_target_groups"></a> [target\_groups](#output\_target\_groups) | load balancer target group 정보 리스트 |
 | <a name="output_type"></a> [type](#output\_type) | load balancer type |
 | <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | load balancer 가 생성된 VPC ID |
 | <a name="output_zone_id"></a> [zone\_id](#output\_zone\_id) | Route53 별칭 레코드에 사용되는 load balancer 호스팅 영역 ID. |

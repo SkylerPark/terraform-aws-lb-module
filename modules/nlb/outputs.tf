@@ -72,73 +72,7 @@ output "attributes" {
   }
 }
 
-output "listener" {
+output "listeners" {
   description = "load balancer listener 정보 리스트"
-  value = {
-    for listener in var.listeners : "${aws_lb.this.name}-${aws_lb_listener.this[listener.port].protocol}:${listener.port}" => {
-      arn      = aws_lb_listener.this[listener.port].arn
-      id       = aws_lb_listener.this[listener.port].id
-      port     = aws_lb_listener.this[listener.port].port
-      protocol = aws_lb_listener.this[listener.port].protocol
-      default_actions = {
-        forward = {
-          target_group = [
-            for target in [listener.target_group] : {
-              arn = target
-            }
-          ]
-        }
-      }
-      tls = try({
-        certificate = aws_lb_listener.this[listener.port].certificate_arn
-        additional_certificates = [
-          for certificate in values(aws_lb_listener_certificate.this) :
-          certificate.certificate_arn
-        ]
-        security_policy = aws_lb_listener.this[listener.port].security_policy
-        alpn_policy     = aws_lb_listener.this[listener.port].alpn_policy
-      }, null)
-    }
-  }
-}
-
-output "target_groups" {
-  description = "load balancer target group 정보 리스트"
-  value = {
-    for target_group, target_value in var.target_groups : target_group => {
-      arn              = aws_lb_target_group.this[target_group].arn
-      id               = aws_lb_target_group.this[target_group].id
-      name             = aws_lb_target_group.this[target_group].name
-      type             = upper(aws_lb_target_group.this[target_group].target_type)
-      port             = aws_lb_target_group.this[target_group].port
-      protocol         = aws_lb_target_group.this[target_group].protocol
-      protocol_version = aws_lb_target_group.this[target_group].protocol_version
-      targets = [
-        for target in aws_lb_target_group_attachment.this : {
-          target_id = target.target_id
-          port      = target.port
-        }
-      ]
-      attributes = {
-        deregistration_delay     = aws_lb_target_group.this[target_group].deregistration_delay
-        load_balancing_algorithm = upper(aws_lb_target_group.this[target_group].load_balancing_algorithm_type)
-        slow_start_duration      = aws_lb_target_group.this[target_group].slow_start
-        stickiness = {
-          enabled = aws_lb_target_group.this[target_group].stickiness[0].enabled
-          type    = upper(aws_lb_target_group.this[target_group].stickiness[0].type)
-        }
-        health_check = {
-          protocol      = aws_lb_target_group.this[target_group].health_check[0].protocol
-          port          = aws_lb_target_group.this[target_group].health_check[0].port
-          path          = aws_lb_target_group.this[target_group].health_check[0].path
-          success_codes = aws_lb_target_group.this[target_group].health_check[0].matcher
-
-          healthy_threshold   = aws_lb_target_group.this[target_group].health_check[0].healthy_threshold
-          unhealthy_threshold = aws_lb_target_group.this[target_group].health_check[0].unhealthy_threshold
-          interval            = aws_lb_target_group.this[target_group].health_check[0].interval
-          timeout             = aws_lb_target_group.this[target_group].health_check[0].timeout
-        }
-      }
-    }
-  }
+  value       = module.listener
 }
