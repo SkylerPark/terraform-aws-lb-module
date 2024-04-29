@@ -22,6 +22,7 @@
 | <a name="module_instance"></a> [instance](#module\_instance) | git::https://github.com/SkylerPark/terraform-aws-ec2-module.git//modules/instance/ | tags/1.1.2 |
 | <a name="module_nat_gateway"></a> [nat\_gateway](#module\_nat\_gateway) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/nat-gateway/ | tags/1.1.0 |
 | <a name="module_nlb"></a> [nlb](#module\_nlb) | ../../modules/nlb | n/a |
+| <a name="module_nlb_security_group"></a> [nlb\_security\_group](#module\_nlb\_security\_group) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/security-group/ | tags/1.1.0 |
 | <a name="module_private_route_table"></a> [private\_route\_table](#module\_private\_route\_table) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/route-table/ | tags/1.1.0 |
 | <a name="module_private_subnet_group"></a> [private\_subnet\_group](#module\_private\_subnet\_group) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/subnet-group/ | tags/1.1.0 |
 | <a name="module_public_route_table"></a> [public\_route\_table](#module\_public\_route\_table) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/route-table/ | tags/1.1.0 |

@@ -172,6 +172,16 @@ variable "xff_header" {
   }
 }
 
+variable "security_groups" {
+  description = "(선택) load balancer 에 추가할 security group 리스트."
+  type        = list(string)
+  default     = []
+  nullable    = false
+}
+
+###################################################
+# Listener(s)
+###################################################
 variable "listeners" {
   description = <<EOF
   (선택) load balancer 리스너 목록 입니다. `listeners` 블록 내용.
@@ -186,82 +196,6 @@ variable "listeners" {
       (선택) `security_policy` - SSL(Secure Socket Layer) 협상 구성에 대한 보안 정책의 이름. 프로토콜이 `HTTPS` 일때만 사용. Default: `ELBSecurityPolicy-2016-08`.
   EOF
   type        = any
-  default     = []
-  nullable    = false
-}
-
-###################################################
-# Security Group
-###################################################
-variable "default_security_group" {
-  description = <<EOF
-  (선택) load balancer 에 추가 security group 설정. `security_group` 블록 내용.
-    (필수) `enabled` - security group 을 생성 할지 여부 Default: false
-    (선택) `name` - security group 이름 설정하지 않으면, load balancer 의 이름으로 설정
-    (선택) 수신에 대한 설정 `ingress_rules` 블록 내용.
-      (필수) `id` - 수신 규칙의 ID 입니다 이값은 Terraform 코드 내에서만 사용.
-      (선택) `description` - 규칙에 대한 설명.
-      (필수) `protocol` - 규칙에 대한 protocol. `protocol` 이 `-1` 로 됫을댄 모든 프로토콜 모든 포트범위로 되며, `from_port` `to_port` 값은 정의 불가.
-      (필수) `from_port` - 포트 범위의 시작 TCP, UDP protocols, or ICMP/ICMPv6 type.
-      (필수) `to_port` - 포트 범위의 끝 TCP and UDP protocols, or an ICMP/ICMPv6 type.
-      (선택) `ipv4_cidrs` - IPv4 에 대한 CIDR 리스트.
-      (선택) `ipv6_cidrs` - IPv6에 대한 CIDR 리스트.
-      (선택) `prefix_lists` - prefix list.
-      (선택) `security_groups` - Security Group ID 리스트.
-      (선택) `self` - self 보안그룹을 추가할 것인지 여부.
-    (선택) `egress_rules` - security group 송신 정책 map
-      (필수) `id` - 송신 규칙의 ID 입니다 이값은 Terraform 코드 내에서만 사용.
-      (선택) `description` - 규칙에 대한 설명.
-      (필수) `protocol` - 규칙에 대한 protocol. `protocol` 이 `-1` 로 됫을댄 모든 프로토콜 모든 포트범위로 되며, `from_port` `to_port` 값은 정의 불가.
-      (필수) `from_port` - 포트 범위의 시작 TCP, UDP protocols, or ICMP/ICMPv6 type.
-      (필수) `to_port` - 포트 범위의 끝 TCP and UDP protocols, or an ICMP/ICMPv6 type.
-      (선택) `ipv4_cidrs` - IPv4 에 대한 CIDR 리스트.
-      (선택) `ipv6_cidrs` - IPv6에 대한 CIDR 리스트.
-      (선택) `prefix_lists` - prefix list.
-      (선택) `security_groups` - Security Group ID 리스트.
-      (선택) `self` - self 보안그룹을 추가할 것인지 여부.
-  EOF
-
-  type = object({
-    enabled     = optional(bool, true)
-    name        = optional(string)
-    description = optional(string, "")
-    ingress_rules = optional(
-      list(object({
-        id              = string
-        description     = optional(string, "")
-        protocol        = string
-        from_port       = number
-        to_port         = number
-        ipv4_cidrs      = optional(list(string), [])
-        ipv6_cidrs      = optional(list(string), [])
-        prefix_lists    = optional(list(string), [])
-        security_groups = optional(list(string), [])
-        self            = optional(bool, false)
-      })), []
-    )
-    egress_rules = optional(
-      list(object({
-        id              = string
-        description     = optional(string, "")
-        protocol        = string
-        from_port       = number
-        to_port         = number
-        ipv4_cidrs      = optional(list(string), [])
-        ipv6_cidrs      = optional(list(string), [])
-        prefix_lists    = optional(list(string), [])
-        security_groups = optional(list(string), [])
-        self            = optional(bool, false)
-      })), []
-    )
-  })
-  default  = {}
-  nullable = false
-}
-
-variable "security_groups" {
-  description = "(선택) load balancer 에 추가할 security group 리스트."
-  type        = list(string)
   default     = []
   nullable    = false
 }

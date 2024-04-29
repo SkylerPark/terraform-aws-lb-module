@@ -71,4 +71,3 @@ output "health_check" {
     timeout             = aws_lb_target_group.this.health_check[0].timeout
   }
 }
-

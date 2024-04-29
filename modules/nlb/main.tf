@@ -26,11 +26,11 @@ resource "aws_lb" "this" {
   }
 
   ## Access Control
-  enforce_security_group_inbound_rules_on_private_link_traffic = (length(local.security_groups) > 0
+  enforce_security_group_inbound_rules_on_private_link_traffic = (length(var.security_groups) > 0
     ? (var.security_group_evaluation_on_privatelink_enabled ? "on" : "off")
     : null
   )
-  security_groups = local.security_groups
+  security_groups = var.security_groups
 
   dynamic "access_logs" {
     for_each = var.access_log.enabled ? [var.access_log] : []

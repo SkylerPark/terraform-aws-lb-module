@@ -19,10 +19,12 @@
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_alb"></a> [alb](#module\_alb) | ../../modules/alb | n/a |
+| <a name="module_alb_security_group"></a> [alb\_security\_group](#module\_alb\_security\_group) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/security-group/ | tags/1.1.0 |
 | <a name="module_eip"></a> [eip](#module\_eip) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/elastic-ip/ | tags/1.1.0 |
 | <a name="module_instance"></a> [instance](#module\_instance) | git::https://github.com/SkylerPark/terraform-aws-ec2-module.git//modules/instance/ | tags/1.1.2 |
 | <a name="module_nat_gateway"></a> [nat\_gateway](#module\_nat\_gateway) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/nat-gateway/ | tags/1.1.0 |
 | <a name="module_nlb"></a> [nlb](#module\_nlb) | ../../modules/nlb | n/a |
+| <a name="module_nlb_security_group"></a> [nlb\_security\_group](#module\_nlb\_security\_group) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/security-group/ | tags/1.1.0 |
 | <a name="module_parksm_alb_tg_http"></a> [parksm\_alb\_tg\_http](#module\_parksm\_alb\_tg\_http) | ../../modules/nlb-target-group | n/a |
 | <a name="module_parksm_alb_tg_https"></a> [parksm\_alb\_tg\_https](#module\_parksm\_alb\_tg\_https) | ../../modules/nlb-target-group | n/a |
 | <a name="module_private_route_table"></a> [private\_route\_table](#module\_private\_route\_table) | git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/route-table/ | tags/1.1.0 |

@@ -1,48 +1,52 @@
+module "nlb_security_group" {
+  source                 = "git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/security-group/?ref=tags/1.1.0"
+  name                   = "parksm-nlb-test"
+  vpc_id                 = module.vpc.id
+  revoke_rules_on_delete = true
+
+  ingress_rules = [
+    {
+      id          = "tcp/80"
+      description = "Allow HTTP from Any"
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      ipv4_cidrs  = ["0.0.0.0/0"]
+    },
+    {
+      id          = "tcp/443"
+      description = "Allow HTTPS from Any"
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      ipv4_cidrs  = ["0.0.0.0/0"]
+    }
+  ]
+  egress_rules = [
+    {
+      id          = "all/all"
+      description = "Allow all traffic form Any"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      ipv4_cidrs  = ["0.0.0.0/0"]
+    },
+  ]
+}
+
 module "nlb" {
   source          = "../../modules/nlb"
   name            = "parksm-nlb-alb"
   is_public       = true
   ip_address_type = "ipv4"
   vpc_id          = module.vpc.id
+  security_groups = [module.nlb_security_group.id]
 
   network_mapping = [
     for subnet in module.public_subnet_group.ids : {
       subnet = subnet
     }
   ]
-
-  default_security_group = {
-    enabled = true
-    name    = "parksm-nlb-alb"
-    ingress_rules = [
-      {
-        id          = "tcp/80"
-        description = "Allow HTTP from VPC"
-        from_port   = 80
-        to_port     = 80
-        protocol    = "tcp"
-        ipv4_cidrs  = ["0.0.0.0/0"]
-      },
-      {
-        id          = "tcp/443"
-        description = "Allow HTTPS from VPC"
-        from_port   = 443
-        to_port     = 443
-        protocol    = "tcp"
-        ipv4_cidrs  = ["0.0.0.0/0"]
-      }
-    ]
-    egress_rules = [
-      {
-        id          = "all/all"
-        description = "Allow all traffics to the internet"
-        from_port   = 0
-        to_port     = 0
-        protocol    = "-1"
-        ipv4_cidrs  = ["0.0.0.0/0"]
-      },
-    ]
-  }
 
   ## Attributes
   route53_resolver_availability_zone_affinity = "ANY"

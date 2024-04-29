@@ -48,11 +48,6 @@ output "subnets" {
   value       = aws_lb.this.subnets
 }
 
-output "default_security_group" {
-  description = "load balancer 에 default security group ID."
-  value       = one(module.security_group[*].id)
-}
-
 output "security_groups" {
   description = "load balancer security group Ids."
   value       = aws_lb.this.security_groups

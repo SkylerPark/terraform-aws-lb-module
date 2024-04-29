@@ -2,6 +2,42 @@ locals {
   region = "ap-northeast-2"
 }
 
+module "alb_security_group" {
+  source                 = "git::https://github.com/SkylerPark/terraform-aws-vpc-module.git//modules/security-group/?ref=tags/1.1.0"
+  name                   = "parksm-alb-test"
+  vpc_id                 = module.vpc.id
+  revoke_rules_on_delete = true
+
+  ingress_rules = [
+    {
+      id          = "tcp/80"
+      description = "Allow HTTP from Any"
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      ipv4_cidrs  = ["0.0.0.0/0"]
+    },
+    {
+      id          = "tcp/443"
+      description = "Allow HTTPS from Any"
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      ipv4_cidrs  = ["0.0.0.0/0"]
+    }
+  ]
+  egress_rules = [
+    {
+      id          = "all/all"
+      description = "Allow all traffic form Any"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      ipv4_cidrs  = ["0.0.0.0/0"]
+    },
+  ]
+}
+
 module "alb" {
   source          = "../../modules/alb"
   name            = "parksm-alb-instance"
@@ -9,44 +45,13 @@ module "alb" {
   ip_address_type = "ipv4"
   vpc_id          = module.vpc.id
 
+  security_groups = [module.alb_security_group.id]
+
   network_mapping = [
     for subnet in module.public_subnet_group.ids : {
       subnet = subnet
     }
   ]
-
-  default_security_group = {
-    enabled = true
-    name    = "parksm-alb-instance"
-    ingress_rules = [
-      {
-        id          = "tcp/80"
-        description = "Allow HTTP from VPC"
-        from_port   = 80
-        to_port     = 80
-        protocol    = "tcp"
-        ipv4_cidrs  = ["0.0.0.0/0"]
-      },
-      {
-        id          = "tcp/443"
-        description = "Allow HTTPS from VPC"
-        from_port   = 443
-        to_port     = 443
-        protocol    = "tcp"
-        ipv4_cidrs  = ["0.0.0.0/0"]
-      }
-    ]
-    egress_rules = [
-      {
-        id          = "all/all"
-        description = "Allow all traffics to the internet"
-        from_port   = 0
-        to_port     = 0
-        protocol    = "-1"
-        ipv4_cidrs  = ["0.0.0.0/0"]
-      },
-    ]
-  }
 
   ## Attributes
   desync_mitigation_mode      = "defensive"

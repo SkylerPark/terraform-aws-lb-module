@@ -6,7 +6,7 @@ resource "aws_lb" "this" {
   load_balancer_type = "application"
   internal           = !var.is_public
   ip_address_type    = lower(var.ip_address_type)
-  security_groups    = local.security_groups
+  security_groups    = var.security_groups
 
   dynamic "subnet_mapping" {
     for_each = var.network_mapping
