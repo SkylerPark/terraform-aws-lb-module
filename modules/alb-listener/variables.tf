@@ -107,7 +107,7 @@ variable "rules" {
         contains(["FORWARD", "WEIGHTED_FORWARD", "FIXED_RESPONSE", "REDIRECT_301", "REDIRECT_302", "AUTHENTICATE_COGNITO", "AUTHENTICATE_OIDC"], rule.action_type)
       ])
     ])
-    error_message = "`rules` 설정에 대한 parameter 가 잘못 되었습니다.."
+    error_message = "`rules` 설정에 대한 parameter 가 잘못 되었습니다."
   }
 }
 
