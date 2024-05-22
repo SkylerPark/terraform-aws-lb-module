@@ -254,7 +254,7 @@ resource "aws_lb_listener_rule" "this" {
   ## forward
   dynamic "action" {
     for_each = (each.value.action_type == "FORWARD"
-      ? [each.value.action_parameter] :
+      ? [each.value.action_parameters] :
       []
     )
 
@@ -268,7 +268,7 @@ resource "aws_lb_listener_rule" "this" {
   ## weighted forward
   dynamic "action" {
     for_each = (each.value.action_type == "WEIGHTED_FORWARD"
-      ? [each.value.action_parameter]
+      ? [each.value.action_parameters]
       : []
     )
 
