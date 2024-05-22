@@ -137,10 +137,10 @@ output "rules" {
                 weight = try(target.weight, 1)
               }
             ]
-            stickiness = {
+            stickiness = try({
               enabled  = rule.action.forward.stickiness[0].enabled
               duration = rule.action.forward.stickiness[0].duration
-            }
+            }, null)
           }
           : null
         )
