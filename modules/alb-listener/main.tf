@@ -69,7 +69,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "fixed-response"
-      order = default_action.value.order
+      order = try(default_action.value.order, null)
 
       fixed_response {
         status_code  = try(default_action.value.status_code, 503)
@@ -88,7 +88,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "authenticate-cognito"
-      order = default_action.value.order
+      order = try(default_action.value.order, null)
 
       authenticate_cognito {
         authentication_request_extra_params = try(default_action.value.authentication_request_extra_params, null)
@@ -112,7 +112,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "authenticate-oidc"
-      order = default_action.value.order
+      order = try(default_action.value.order, null)
 
       authenticate_oidc {
         authentication_request_extra_params = try(default_action.value.authentication_request_extra_params, null)
@@ -161,7 +161,7 @@ resource "aws_lb_listener" "this" {
 
     content {
       type  = "redirect"
-      order = default_action.value.order
+      order = try(default_action.value.order, null)
 
       redirect {
         status_code = "HTTP_302"
@@ -260,7 +260,7 @@ resource "aws_lb_listener_rule" "this" {
 
     content {
       type             = "forward"
-      order            = action.value.order
+      order            = try(action.value.order, null)
       target_group_arn = action.value.target_group
     }
   }
@@ -274,7 +274,7 @@ resource "aws_lb_listener_rule" "this" {
 
     content {
       type  = "forward"
-      order = action.value.order
+      order = try(action.value.order, null)
 
       forward {
         dynamic "target_group" {
@@ -306,7 +306,7 @@ resource "aws_lb_listener_rule" "this" {
 
     content {
       type  = "fixed-response"
-      order = action.value.order
+      order = try(action.value.order, null)
 
       fixed_response {
         status_code  = try(action.value.status_code, 503)
@@ -325,7 +325,7 @@ resource "aws_lb_listener_rule" "this" {
 
     content {
       type  = "authenticate-cognito"
-      order = action.value.order
+      order = try(action.value.order, null)
 
       authenticate_cognito {
         authentication_request_extra_params = try(action.value.authentication_request_extra_params, null)
@@ -349,7 +349,7 @@ resource "aws_lb_listener_rule" "this" {
 
     content {
       type  = "authenticate-oidc"
-      order = action.value.order
+      order = try(action.value.order, null)
 
       authenticate_oidc {
         authentication_request_extra_params = try(action.value.authentication_request_extra_params, null)
@@ -376,7 +376,7 @@ resource "aws_lb_listener_rule" "this" {
 
     content {
       type  = "redirect"
-      order = action.value.order
+      order = try(action.value.order, null)
 
       redirect {
         status_code = "HTTP_301"
@@ -398,7 +398,7 @@ resource "aws_lb_listener_rule" "this" {
 
     content {
       type  = "redirect"
-      order = action.value.order
+      order = try(action.value.order, null)
 
       redirect {
         status_code = "HTTP_302"

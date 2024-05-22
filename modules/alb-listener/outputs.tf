@@ -38,10 +38,10 @@ output "default_action" {
             weight = target.weight
           }
         ]
-        stickiness = {
+        stickiness = try({
           enabled  = aws_lb_listener.this.default_action[0].forward[0].stickiness[0].enabled
           duration = aws_lb_listener.this.default_action[0].forward[0].stickiness[0].duration
-        }
+        }, null)
       }
     : null)
     fixed_response = try({
