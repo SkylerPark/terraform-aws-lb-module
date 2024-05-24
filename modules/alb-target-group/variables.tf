@@ -182,9 +182,9 @@ variable "stickiness" {
   validation {
     condition = var.stickiness.enabled ? (
       alltrue([
-        contains(["lb_cookie", "app_cookie", var.stickiness.type]),
+        contains(["lb_cookie", "app_cookie"], var.stickiness.type),
         var.stickiness.type == "lb_cookie" ? alltrue([var.stickiness.cookie_duration >= 1, var.stickiness.cookie_duration <= 604800]) : true,
-        var.stickiness.type == "app_cookie" ? contains(["AWSALB", "AWSALBAPP", "AWSALBTG"], var.stickiness.stickiness_cookie) ? false : true : true
+        var.stickiness.type == "app_cookie" ? contains(["AWSALB", "AWSALBAPP", "AWSALBTG"], var.stickiness.stickiness_cookie) ? true : false : true
       ])
     ) : true
     error_message = "`stickiness` 설정값이 잘못 되었습니다."
